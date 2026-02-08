@@ -5,141 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Pack Builder</title>
 <link rel="manifest" href="manifest.webmanifest" />
-
 <style>
   :root{
-    --bg:#0e1117;
-    --card:#161b22;
-    --field:#0d1117;
-    --text:#ffffff;
-    --muted:rgba(255,255,255,.75);
-    --green:#4caf50;
-    --yellow:#ffc107;
-    --red:#f44336;
+    --bg:#0e1117; --card:#161b22; --field:#0d1117;
+    --text:#fff; --muted:rgba(255,255,255,.75);
+    --green:#4caf50; --yellow:#ffc107; --red:#f44336;
     --accent:#7c5cff;
   }
-  body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:Arial, sans-serif;
-    margin:0;
-    padding:20px;
-  }
+  body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;margin:0;padding:20px;}
   h1{margin:0 0 14px 0;}
-  .card{
-    background:var(--card);
-    padding:15px;
-    border-radius:12px;
-    margin-bottom:15px;
-  }
-  .row{display:flex; gap:12px; flex-wrap:wrap;}
-  .col{flex:1; min-width:160px;}
-  label{
-    display:block;
-    margin-top:8px;
-    margin-bottom:6px;
-    font-size:13px;
-    opacity:.9;
-  }
-  input, select{
-    width:100%;
-    padding:9px;
-    border-radius:8px;
-    border:none;
-    font-size:16px;
-    background:var(--field);
-    color:var(--text);
-  }
+  .card{background:var(--card);padding:15px;border-radius:12px;margin-bottom:15px;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .col{flex:1;min-width:160px;}
+  label{display:block;margin-top:8px;margin-bottom:6px;font-size:13px;opacity:.9;}
+  input,select{width:100%;padding:9px;border-radius:8px;border:none;font-size:16px;background:var(--field);color:var(--text);}
   input:disabled{opacity:.85;}
-  table{width:100%; border-collapse:collapse;}
-  td{padding:6px 0;}
-  td:last-child{text-align:right;}
-  .green{color:var(--green);}
-  .yellow{color:var(--yellow);}
-  .red{color:var(--red);}
-  .small{
-    font-size:12px;
-    opacity:0.82;
-    margin-top:8px;
-    line-height:1.35;
-  }
+  table{width:100%;border-collapse:collapse;}
+  td{padding:6px 0;} td:last-child{text-align:right;}
+  .green{color:var(--green);} .yellow{color:var(--yellow);} .red{color:var(--red);}
+  .small{font-size:12px;opacity:.82;margin-top:8px;line-height:1.35;}
+  .hidden{display:none;}
 
-  /* Battery Button */
-  .batteryBtnWrap{margin-top:14px; display:flex; justify-content:center;}
+  /* battery button */
+  .batteryBtnWrap{margin-top:14px;display:flex;justify-content:center;}
   .batteryBtn{
-    position:relative;
-    width:260px; height:74px;
-    border-radius:18px;
+    position:relative;width:260px;height:74px;border-radius:18px;
     background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
     border:1px solid rgba(255,255,255,.10);
-    overflow:hidden;
-    cursor:pointer;
-    user-select:none;
+    overflow:hidden;cursor:pointer;user-select:none;
     box-shadow:0 0 0 1px rgba(124,92,255,.18) inset;
   }
   .batteryBtn::before{
-    content:"";
-    position:absolute;
-    right:-10px; top:24px;
-    width:14px; height:26px;
-    border-radius:6px;
-    background:rgba(255,255,255,.16);
-    border:1px solid rgba(255,255,255,.10);
+    content:"";position:absolute;right:-10px;top:24px;width:14px;height:26px;border-radius:6px;
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.10);
   }
-  .batteryFill{
-    position:absolute; left:0; top:0; bottom:0;
-    width:0%;
-    background:linear-gradient(90deg, rgba(124,92,255,.85), rgba(124,92,255,.30));
-  }
-  .batteryContent{
-    position:relative; z-index:2;
-    height:100%;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 14px;
-    gap:10px;
-  }
-  .batteryTitle{font-weight:800; font-size:14px;}
-  .batterySub{font-size:12px; opacity:.78; margin-top:2px;}
-  .batteryRight{text-align:right; font-variant-numeric:tabular-nums;}
-  .batteryPct{font-weight:900; font-size:16px;}
-  .batteryState{font-size:12px; opacity:.75; margin-top:2px;}
-  .batteryBtn.disabled{cursor:default; opacity:.92;}
+  .batteryFill{position:absolute;left:0;top:0;bottom:0;width:0%;
+    background:linear-gradient(90deg, rgba(124,92,255,.85), rgba(124,92,255,.30));}
+  .batteryContent{position:relative;z-index:2;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 14px;gap:10px;}
+  .batteryTitle{font-weight:800;font-size:14px;}
+  .batterySub{font-size:12px;opacity:.78;margin-top:2px;}
+  .batteryRight{text-align:right;font-variant-numeric:tabular-nums;}
+  .batteryPct{font-weight:900;font-size:16px;}
+  .batteryState{font-size:12px;opacity:.75;margin-top:2px;}
+  .batteryBtn.disabled{cursor:default;opacity:.92;}
 
-  .hidden{display:none;}
-
-  /* Layout page */
-  .topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    margin-bottom:12px;
-  }
-  .btn{
-    border:none;
-    border-radius:10px;
-    padding:10px 12px;
-    background:rgba(255,255,255,.06);
-    color:var(--text);
-    font-weight:800;
-    cursor:pointer;
-  }
-  .btn.primary{
-    background:rgba(124,92,255,.20);
-    border:1px solid rgba(124,92,255,.55);
-  }
-  .seg{display:flex; gap:10px; flex-wrap:wrap;}
-  .seg .btn{min-width:110px;}
+  /* layout page */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
+  .btn{border:none;border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.06);color:var(--text);font-weight:800;cursor:pointer;}
+  .btn.primary{background:rgba(124,92,255,.20);border:1px solid rgba(124,92,255,.55);}
+  .seg{display:flex;gap:10px;flex-wrap:wrap;} .seg .btn{min-width:110px;}
   .canvasCard{padding:12px;}
-  canvas{
-    width:100%;
-    height:auto;
-    border-radius:12px;
-    background:#0b0b0c;
-    box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;
-  }
+  canvas{width:100%;height:auto;border-radius:12px;background:#0b0b0c;box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;}
 </style>
 </head>
 
@@ -156,32 +72,15 @@
     <select id="cellModel"></select>
 
     <div class="row">
-      <div class="col">
-        <label>Format</label>
-        <input id="format" disabled>
-      </div>
-      <div class="col">
-        <label>Kapazität (mAh)</label>
-        <input id="capacity" disabled>
-      </div>
+      <div class="col"><label>Format</label><input id="format" disabled></div>
+      <div class="col"><label>Kapazität (mAh)</label><input id="capacity" disabled></div>
     </div>
-
     <div class="row">
-      <div class="col">
-        <label>Max. Dauerstrom (A)</label>
-        <input id="maxA" disabled>
-      </div>
-      <div class="col">
-        <label>Nominalspannung (V)</label>
-        <input id="nomV" disabled>
-      </div>
+      <div class="col"><label>Max. Dauerstrom (A)</label><input id="maxA" disabled></div>
+      <div class="col"><label>Nominalspannung (V)</label><input id="nomV" disabled></div>
     </div>
-
     <div class="row">
-      <div class="col">
-        <label>Vollspannung (V)</label>
-        <input id="fullV" disabled>
-      </div>
+      <div class="col"><label>Vollspannung (V)</label><input id="fullV" disabled></div>
     </div>
 
     <div class="small" id="cellNote"></div>
@@ -190,14 +89,8 @@
   <div class="card">
     <h3>Pack Konfiguration</h3>
     <div class="row">
-      <div class="col">
-        <label>Serien (S)</label>
-        <input type="number" id="series" value="3" min="1" max="24">
-      </div>
-      <div class="col">
-        <label>Parallel (P)</label>
-        <input type="number" id="parallel" value="2" min="1" max="24">
-      </div>
+      <div class="col"><label>Serien (S)</label><input type="number" id="series" value="3" min="1" max="24"></div>
+      <div class="col"><label>Parallel (P)</label><input type="number" id="parallel" value="2" min="1" max="24"></div>
     </div>
   </div>
 
@@ -225,7 +118,6 @@
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -244,14 +136,6 @@
 
     <div class="row">
       <div class="col">
-        <label>Ansicht</label>
-        <select id="viewMode">
-          <option value="screen">Bildschirm (fit)</option>
-          <option value="real">Realmaß (mm)</option>
-        </select>
-      </div>
-
-      <div class="col">
         <label>Nickelbreite (mm)</label>
         <input id="nickelMm" type="number" min="4" max="20" step="0.5" value="8">
       </div>
@@ -260,27 +144,30 @@
         <label>Zell-Abstand (mm)</label>
         <input id="gapMm" type="number" min="0" max="3" step="0.1" value="0.8">
       </div>
+
+      <div class="col">
+        <label>Nickel-Stil (Top/Bottom)</label>
+        <select id="nickelStyle">
+          <option value="real">Echte Packs (Snake bei P=2)</option>
+          <option value="simple">Einfach (Brücken)</option>
+        </select>
+      </div>
     </div>
 
     <div class="row" style="margin-top:10px;">
-      <div class="col">
-        <button id="exportSvgBtn" class="btn primary" type="button">Export SVG (1:1)</button>
-      </div>
-      <div class="col">
-        <button id="threeBtn" class="btn" type="button">3D Ansicht</button>
-      </div>
+      <div class="col"><button id="exportSvgBtn" class="btn primary" type="button">Export SVG (1:1)</button></div>
+      <div class="col"><button id="threeBtn" class="btn" type="button">3D Ansicht</button></div>
     </div>
 
     <div class="small">
-      Tipp: SVG ist perfekt für 1:1 (Druck/Import in CAD). In Realmaß ist alles in mm gerechnet.
+      Hinweis: Für 1:1 nutzt du den SVG Export. P=2 wird im „Echte Packs“-Modus als Serpentine (Snake) gezeichnet.
     </div>
   </div>
 
   <div class="card canvasCard">
     <canvas id="cv"></canvas>
     <div class="small">
-      Darstellung: Zellen + Nickel (Parallel als Plate, Serie als Brücke serpentine).<br>
-      Hinweis: Für echte Packs immer BMS + Sicherung + Isolation verwenden.
+      Top/Bottom zeigt die jeweilige Seite. Plus/Minus sind so gesetzt wie bei echten 3S2P Packs (+ - + / + - + auf Top).
     </div>
   </div>
 
@@ -290,18 +177,15 @@
       <button id="threeClose" class="btn" type="button">Schließen</button>
     </div>
     <div id="threeContainer" style="width:100%;height:420px;border-radius:12px;overflow:hidden;background:#0b0b0c;margin-top:10px;"></div>
-    <div class="small">Drehen: Maus/Touch. Zoomen: Mausrad/Pinch.</div>
+    <div class="small">Drehen: Touch/Drag. Zoomen: Pinch.</div>
   </div>
 </div>
 
-<!-- Three.js (CDN) -->
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
-/* -----------------------------
-   Cell database (Li-Ion 4.2V)
------------------------------- */
+/* --- Cell DB --- */
 const CELLS = [
   { id:"s35e",  name:"Samsung INR18650-35E",            format:"18650", mAh:3500, maxA:8,  nomV:3.6, fullV:4.2, note:"Hohe Kapazität, moderater Strom." },
   { id:"vtc5a", name:"Sony/Murata Konion US18650VTC5A", format:"18650", mAh:2600, maxA:25, nomV:3.6, fullV:4.2, note:"Sehr hochstromfähig." },
@@ -316,7 +200,6 @@ const CELLS = [
   { id:"p42a",  name:"Molicel INR21700P42A",            format:"21700", mAh:4200, maxA:30, nomV:3.6, fullV:4.2, note:"Top Allround (Power+Kapazität)." },
   { id:"p45b",  name:"Molicel INR21700P45B",            format:"21700", mAh:4500, maxA:45, nomV:3.6, fullV:4.2, note:"Sehr stark (High Power)." }
 ];
-
 const CELL_DIAM_MM = { "18650": 18.3, "20700": 20.3, "21700": 21.3 };
 
 const el = {
@@ -330,6 +213,7 @@ const el = {
   nomV: document.getElementById("nomV"),
   fullV: document.getElementById("fullV"),
   cellNote: document.getElementById("cellNote"),
+
   series: document.getElementById("series"),
   parallel: document.getElementById("parallel"),
   cellInfo: document.getElementById("cellInfo"),
@@ -344,27 +228,31 @@ const el = {
   backBtn: document.getElementById("backBtn"),
   topBtn: document.getElementById("topBtn"),
   bottomBtn: document.getElementById("bottomBtn"),
-  cv: document.getElementById("cv"),
 
-  viewMode: document.getElementById("viewMode"),
   nickelMm: document.getElementById("nickelMm"),
   gapMm: document.getElementById("gapMm"),
+  nickelStyle: document.getElementById("nickelStyle"),
   exportSvgBtn: document.getElementById("exportSvgBtn"),
   threeBtn: document.getElementById("threeBtn"),
   threeWrap: document.getElementById("threeWrap"),
   threeContainer: document.getElementById("threeContainer"),
   threeClose: document.getElementById("threeClose"),
+
+  cv: document.getElementById("cv"),
 };
 
 const state = {
-  view: "top",         // top | bottom
-  isAnimating: false,
-  preferPlusOnTop: true,
-  flipPolarity: false, // reserved
-  viewMode: "screen",
-  nickelMm: 8,
-  gapMm: 0.8,
+  view:"top",
+  isAnimating:false,
+  // Base polarity: col0 + on top, col1 -, col2 + (matches your 3S2P reference)
+  flipPolarity:false,
 };
+
+function clampInt(v, min, max, fallback){
+  const n = parseInt(v, 10);
+  if (Number.isNaN(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
 
 function fillDropdown(){
   for(const c of CELLS){
@@ -379,29 +267,12 @@ function fillDropdown(){
 function getSelectedCell(){
   return CELLS.find(c => c.id === el.cellModel.value) || CELLS[0];
 }
-
 function getCellDiamMm(){
   const cell = getSelectedCell();
   return CELL_DIAM_MM[cell.format] || 18.3;
 }
 
-function clampInt(v, min, max, fallback){
-  const n = parseInt(v, 10);
-  if (Number.isNaN(n)) return fallback;
-  return Math.max(min, Math.min(max, n));
-}
-
-function applyPreferredOrientation(){
-  // For future extensions; with col0 plus-up, odd S already gives plus-richer top.
-  state.flipPolarity = false;
-}
-
-/* Polarity logic (matches your 3S2P reference)
-   Base rule:
-   - column 0: TOP shows "+"
-   - column 1: TOP shows "-"
-   - column 2: TOP shows "+"
-*/
+// Polarity: depends on col parity and view (top vs bottom)
 function isPlus(row, col){
   let plusTopBase = (col % 2 === 0);
   if (state.flipPolarity) plusTopBase = !plusTopBase;
@@ -410,13 +281,10 @@ function isPlus(row, col){
 
 function updateCalc(){
   const cell = getSelectedCell();
-
   const S = clampInt(el.series.value, 1, 24, 3);
   const P = clampInt(el.parallel.value, 1, 24, 2);
-  el.series.value = S;
-  el.parallel.value = P;
+  el.series.value = S; el.parallel.value = P;
 
-  // locked fields
   el.format.value = cell.format;
   el.capacity.value = cell.mAh;
   el.maxA.value = cell.maxA;
@@ -424,9 +292,7 @@ function updateCalc(){
   el.fullV.value = cell.fullV.toFixed(2);
   el.cellNote.textContent = cell.note || "";
 
-  // Li-Ion reference levels
   const storageV=3.80, cutoffRec=3.30, cutoffAbs=3.00;
-
   const packNomV=cell.nomV*S;
   const packFullV=cell.fullV*S;
   const packStorageV=storageV*S;
@@ -445,7 +311,6 @@ function updateCalc(){
     <tr><td>Kapazität</td><td>${cell.mAh} mAh</td></tr>
     <tr><td>Max Dauerstrom</td><td>${cell.maxA} A</td></tr>
   `;
-
   el.packInfo.innerHTML=`
     <tr><td>Konfiguration</td><td>${S}S${P}P</td></tr>
     <tr><td>Zellen gesamt</td><td>${S*P}</td></tr>
@@ -459,14 +324,11 @@ function updateCalc(){
     <tr><td>Max Dauerstrom</td><td>${packMaxA.toFixed(1)} A</td></tr>
   `;
 
-  applyPreferredOrientation();
-
-  // reset button display if not animating
   if (!state.isAnimating){
-    el.packBtnFill.style.width = "0%";
-    el.packBtnPct.textContent = "0%";
-    el.packBtnState.textContent = "bereit";
-    el.packBtnText.textContent = "Tippen zum Laden & Layout öffnen";
+    el.packBtnFill.style.width="0%";
+    el.packBtnPct.textContent="0%";
+    el.packBtnState.textContent="bereit";
+    el.packBtnText.textContent="Tippen zum Laden & Layout öffnen";
     el.packBtn.classList.remove("disabled");
   }
 }
@@ -476,7 +338,6 @@ function showPage(which){
     el.pageCalc.classList.add("hidden");
     el.pageLayout.classList.remove("hidden");
     window.scrollTo(0,0);
-    applyPreferredOrientation();
     resizeCanvas();
     drawLayout();
   } else {
@@ -485,70 +346,32 @@ function showPage(which){
   }
 }
 
-/* Battery button animation */
 function animateToLayout(){
   if (state.isAnimating) return;
   state.isAnimating = true;
-
   el.packBtn.classList.add("disabled");
-  el.packBtnState.textContent = "lädt…";
-  el.packBtnText.textContent = "Bitte warten";
+  el.packBtnState.textContent="lädt…";
+  el.packBtnText.textContent="Bitte warten";
 
-  const duration = 1200;
-  const start = performance.now();
+  const duration=1200;
+  const start=performance.now();
 
   function tick(now){
-    const t = Math.min(1, (now - start) / duration);
-    const pct = Math.round(t * 100);
-    el.packBtnFill.style.width = pct + "%";
-    el.packBtnPct.textContent = pct + "%";
-
-    if (t < 1){
-      requestAnimationFrame(tick);
-    } else {
-      el.packBtnState.textContent = "fertig";
-      el.packBtnText.textContent = "Layout wird geöffnet…";
-      setTimeout(() => {
-        state.isAnimating = false;
-        showPage("layout");
-      }, 180);
+    const t=Math.min(1,(now-start)/duration);
+    const pct=Math.round(t*100);
+    el.packBtnFill.style.width=pct+"%";
+    el.packBtnPct.textContent=pct+"%";
+    if (t<1) requestAnimationFrame(tick);
+    else{
+      el.packBtnState.textContent="fertig";
+      el.packBtnText.textContent="Layout wird geöffnet…";
+      setTimeout(()=>{ state.isAnimating=false; showPage("layout"); }, 180);
     }
   }
   requestAnimationFrame(tick);
 }
 
-/* Layout controls */
-function setView(v){
-  state.view = v;
-  if (v === "top"){
-    el.topBtn.classList.add("primary");
-    el.bottomBtn.classList.remove("primary");
-  } else {
-    el.bottomBtn.classList.add("primary");
-    el.topBtn.classList.remove("primary");
-  }
-  drawLayout();
-}
-
-function resizeCanvas(){
-  const cv = el.cv;
-  const rect = cv.getBoundingClientRect();
-  const dpr = Math.max(1, window.devicePixelRatio || 1);
-
-  const maxH = Math.floor(window.innerHeight * 0.52);
-  const targetH = Math.min(maxH, Math.floor(rect.width * 0.50));
-
-  cv.width  = Math.floor(rect.width * dpr);
-  cv.height = Math.floor(targetH * dpr);
-}
-
-window.addEventListener("resize", ()=>{
-  if (!el.pageLayout.classList.contains("hidden")){
-    resizeCanvas();
-    drawLayout();
-  }
-});
-
+/* ---- Drawing helpers ---- */
 function roundRect(ctx, x, y, w, h, r){
   const min = Math.min(w,h);
   if (r > min/2) r = min/2;
@@ -561,84 +384,147 @@ function roundRect(ctx, x, y, w, h, r){
   ctx.closePath();
 }
 
-/* Build real geometry in mm for drawing & export */
+function resizeCanvas(){
+  const cv=el.cv;
+  const rect=cv.getBoundingClientRect();
+  const dpr=Math.max(1, window.devicePixelRatio||1);
+  const maxH=Math.floor(window.innerHeight*0.55);
+  const targetH=Math.min(maxH, Math.floor(rect.width*0.55));
+  cv.width=Math.floor(rect.width*dpr);
+  cv.height=Math.floor(targetH*dpr);
+}
+
+/* ---- Build geometry in mm (real positions) ---- */
 function buildGeometryMm(){
-  const cell = getSelectedCell();
-  const S = clampInt(el.series.value, 1, 24, 3);
-  const P = clampInt(el.parallel.value, 1, 24, 2);
+  const cell=getSelectedCell();
+  const S=clampInt(el.series.value,1,24,3);
+  const P=clampInt(el.parallel.value,1,24,2);
 
-  const d = getCellDiamMm();
-  const r = d / 2;
+  const d=getCellDiamMm();
+  const r=d/2;
 
-  const gap = Math.max(0, Number(el.gapMm.value) || state.gapMm);
-  const nickelW = Math.max(4, Number(el.nickelMm.value) || state.nickelMm);
+  const gap=Math.max(0, Number(el.gapMm.value)||0.8);
+  const nickelW=Math.max(4, Number(el.nickelMm.value)||8);
 
-  const packW = S * d + (S - 1) * gap;
-  const packH = P * d + (P - 1) * gap;
+  const packW=S*d + (S-1)*gap;
+  const packH=P*d + (P-1)*gap;
 
-  function cellCenterMm(row, col){
-    const x = r + col * (d + gap);
-    const y = r + row * (d + gap);
-    return { x, y };
+  function cellCenterMm(row,col){
+    const x=r + col*(d+gap);
+    const y=r + row*(d+gap);
+    return {x,y};
   }
 
-  const parallelPlates = [];
-  const seriesBridges = [];
-
-  // Parallel plates (between rows in same column)
-  for (let col=0; col<S; col++){
-    for (let row=0; row<P-1; row++){
-      const a = cellCenterMm(row, col);
-      const b = cellCenterMm(row+1, col);
-
-      const plateW = Math.max(nickelW, r * 1.25);
-      const plateH = (b.y - a.y) + r * 0.25;
-
-      parallelPlates.push({
-        x: a.x - plateW/2,
-        y: a.y - r*0.10,
-        w: plateW,
-        h: plateH
-      });
+  // Cells list
+  const cells=[];
+  for(let row=0; row<P; row++){
+    for(let col=0; col<S; col++){
+      const c=cellCenterMm(row,col);
+      cells.push({row,col,x:c.x,y:c.y,r,plus:isPlus(row,col)});
     }
   }
 
-  // Series bridges (serpentine): one per column transition
-  for (let col=0; col<S-1; col++){
-    const row = (col % 2 === 0) ? 0 : (P - 1);
+  // Nickel rectangles (mm)
+  const parallelNickel=[];
+  const seriesNickel=[];
 
-    const aPlus = isPlus(row, col);
-    const bPlus = isPlus(row, col+1);
-    if (aPlus === bPlus) continue;
+  const style = el.nickelStyle.value;
 
-    const a = cellCenterMm(row, col);
-    const b = cellCenterMm(row, col+1);
-
-    const bridgeH = Math.max(4, r * 0.42);
-    const bridgeW = (b.x - a.x) - r * 0.75;
-
-    seriesBridges.push({
-      x: a.x + r*0.38,
-      y: a.y - bridgeH/2,
-      w: bridgeW,
-      h: bridgeH
-    });
-  }
-
-  const cells = [];
-  for (let row=0; row<P; row++){
+  // --- PARALLEL: in "real" mode (P=2) we draw vertical strips like in real packs ---
+  if (style === "real" && P === 2){
     for (let col=0; col<S; col++){
-      const c = cellCenterMm(row, col);
-      cells.push({
-        row, col,
-        x: c.x, y: c.y,
-        r,
-        plus: isPlus(row, col)
+      const topC = cellCenterMm(0,col);
+      const botC = cellCenterMm(1,col);
+
+      // vertical strip covering both cell caps
+      const stripW = nickelW;
+      const stripH = (botC.y - topC.y) + d*0.85;
+
+      parallelNickel.push({
+        x: topC.x - stripW/2,
+        y: topC.y - d*0.42,
+        w: stripW,
+        h: stripH
       });
+    }
+  } else {
+    // simple fallback: small plates between rows
+    for (let col=0; col<S; col++){
+      for (let row=0; row<P-1; row++){
+        const a = cellCenterMm(row,col);
+        const b = cellCenterMm(row+1,col);
+        const plateW = Math.max(nickelW, r*1.25);
+        const plateH = (b.y - a.y) + r*0.25;
+        parallelNickel.push({ x:a.x-plateW/2, y:a.y-r*0.10, w:plateW, h:plateH });
+      }
     }
   }
 
-  return { cell, S, P, d, r, gap, nickelW, packW, packH, cells, parallelPlates, seriesBridges };
+  // --- SERIES: in "real" mode with P=2 we draw a SNAKE like your photo ---
+  if (style === "real" && P === 2 && S >= 2){
+    // thickness of the snake lanes
+    const lane = Math.max(4, r*0.45);
+    const vLane = lane;
+
+    // helper: place a horizontal rect between col a and col b at row
+    function addHoriz(row, colA, colB){
+      const a = cellCenterMm(row, colA);
+      const b = cellCenterMm(row, colB);
+
+      const x = a.x + r*0.10;
+      const w = (b.x - a.x) - r*0.20;
+      const y = a.y - lane/2;
+      seriesNickel.push({x, y, w, h: lane});
+    }
+
+    // helper: place a vertical rect inside a column (centered) connecting top->bottom
+    function addVert(col){
+      const t = cellCenterMm(0, col);
+      const b = cellCenterMm(1, col);
+
+      const x = t.x - vLane/2;
+      const y = t.y;
+      const h = (b.y - t.y);
+      seriesNickel.push({x, y, w: vLane, h});
+    }
+
+    // Real pack snake:
+    // For 3S2P:
+    //  - horizontal top: col0->col1
+    //  - vertical down in col1
+    //  - horizontal bottom: col1->col2
+    // For larger S: continue serpentine: up/down each step.
+    let currentRow = 0; // start top
+    for (let col=0; col<S-1; col++){
+      // horizontal in current row from col to col+1
+      addHoriz(currentRow, col, col+1);
+
+      // if more transitions remain, we need to switch row at the next column (col+1)
+      if (col < S-2){
+        addVert(col+1);
+        currentRow = 1 - currentRow;
+      }
+    }
+  } else {
+    // simple fallback: one bridge per transition (serpentine ends)
+    for (let col=0; col<S-1; col++){
+      const row = (col%2===0) ? 0 : (P-1);
+      const aPlus=isPlus(row,col);
+      const bPlus=isPlus(row,col+1);
+      if (aPlus===bPlus) continue;
+
+      const a=cellCenterMm(row,col);
+      const b=cellCenterMm(row,col+1);
+
+      const h = Math.max(4, r*0.45);
+      const x = a.x + r*0.38;
+      const y = a.y - h/2;
+      const w = (b.x - a.x) - r*0.75;
+      seriesNickel.push({x,y,w,h});
+    }
+  }
+
+  return {cell,S,P,d,r,gap,nickelW,packW,packH,cells,parallelNickel,seriesNickel};
 }
 
 function drawLayout(){
@@ -648,73 +534,71 @@ function drawLayout(){
   const w = cv.width, h = cv.height;
 
   ctx.clearRect(0,0,w,h);
-  ctx.fillStyle = "#0b0b0c";
+  ctx.fillStyle="#0b0b0c";
   ctx.fillRect(0,0,w,h);
 
-  const padPx = Math.max(24, Math.floor(w * 0.04));
+  const padPx = Math.max(22, Math.floor(w*0.04));
   const availW = w - padPx*2;
   const availH = h - padPx*2;
 
+  // scale to fit
   const pxPerMm = Math.min(availW/geo.packW, availH/geo.packH);
-  const offX = padPx + (availW - geo.packW * pxPerMm) / 2;
-  const offY = padPx + (availH - geo.packH * pxPerMm) / 2;
+  const offX = padPx + (availW - geo.packW*pxPerMm)/2;
+  const offY = padPx + (availH - geo.packH*pxPerMm)/2;
 
-  const mmToPxX = (x)=> offX + x * pxPerMm;
-  const mmToPxY = (y)=> offY + y * pxPerMm;
+  const X = (mm)=> offX + mm*pxPerMm;
+  const Y = (mm)=> offY + mm*pxPerMm;
 
   // title
-  ctx.fillStyle = "rgba(255,255,255,.88)";
-  ctx.font = `${Math.floor(w*0.05)}px Arial`;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
+  ctx.fillStyle="rgba(255,255,255,.88)";
+  ctx.font=`${Math.floor(w*0.05)}px Arial`;
+  ctx.textAlign="left";
+  ctx.textBaseline="top";
   ctx.fillText(`${geo.S}S${geo.P}P — ${state.view.toUpperCase()} (Nickel)`, padPx, 10);
 
-  // Nickel (series on top of parallel visually)
-  ctx.fillStyle = "rgba(220,220,220,.62)";
-  for (const r of geo.seriesBridges){
-    roundRect(ctx, mmToPxX(r.x), mmToPxY(r.y), r.w*pxPerMm, r.h*pxPerMm, Math.max(2, r.h*pxPerMm*0.35));
+  // Nickel draw order: parallel strips + snake
+  ctx.fillStyle="rgba(200,200,200,.40)";
+  for(const p of geo.parallelNickel){
+    roundRect(ctx, X(p.x), Y(p.y), p.w*pxPerMm, p.h*pxPerMm, Math.max(2, p.w*pxPerMm*0.18));
     ctx.fill();
   }
 
-  ctx.fillStyle = "rgba(200,200,200,.30)";
-  for (const p of geo.parallelPlates){
-    roundRect(ctx, mmToPxX(p.x), mmToPxY(p.y), p.w*pxPerMm, p.h*pxPerMm, Math.max(2, p.w*pxPerMm*0.35));
+  ctx.fillStyle="rgba(220,220,220,.70)";
+  for(const s of geo.seriesNickel){
+    roundRect(ctx, X(s.x), Y(s.y), s.w*pxPerMm, s.h*pxPerMm, Math.max(2, s.h*pxPerMm*0.35));
     ctx.fill();
   }
 
-  // Cells
-  for (const c of geo.cells){
-    const x = mmToPxX(c.x);
-    const y = mmToPxY(c.y);
-    const rr = c.r * pxPerMm;
+  // cells
+  for(const c of geo.cells){
+    const cx = X(c.x), cy = Y(c.y), rr = c.r*pxPerMm;
 
-    ctx.fillStyle = "rgba(124,92,255,.10)";
-    ctx.beginPath(); ctx.arc(x,y,rr,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="rgba(124,92,255,.10)";
+    ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2); ctx.fill();
 
-    ctx.strokeStyle = "rgba(255,255,255,.10)";
-    ctx.lineWidth = Math.max(1, Math.floor(rr*0.10));
-    ctx.beginPath(); ctx.arc(x,y,rr,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle="rgba(255,255,255,.12)";
+    ctx.lineWidth=Math.max(1, Math.floor(rr*0.10));
+    ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2); ctx.stroke();
 
-    ctx.fillStyle = "rgba(255,255,255,.06)";
-    ctx.beginPath(); ctx.arc(x,y,Math.floor(rr*0.55),0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="rgba(255,255,255,.06)";
+    ctx.beginPath(); ctx.arc(cx,cy,Math.floor(rr*0.55),0,Math.PI*2); ctx.fill();
 
-    ctx.fillStyle = c.plus ? "rgba(255,255,255,.92)" : "rgba(255,255,255,.70)";
-    ctx.font = `${Math.floor(rr*0.95)}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(c.plus ? "+" : "-", x, y);
+    ctx.fillStyle=c.plus ? "rgba(255,255,255,.92)" : "rgba(255,255,255,.70)";
+    ctx.font=`${Math.floor(rr*0.95)}px Arial`;
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillText(c.plus ? "+" : "-", cx, cy);
   }
 }
 
-/* SVG export 1:1 in mm */
+/* 1:1 SVG Export */
 function exportSvgOneToOne(){
   const geo = buildGeometryMm();
   const title = `${geo.S}S${geo.P}P-${state.view}`;
-  const W = geo.packW;
-  const H = geo.packH;
+  const W = geo.packW, H = geo.packH;
 
-  const rects = (arr, fill, opacity) => arr.map(r =>
-    `<rect x="${r.x.toFixed(3)}" y="${r.y.toFixed(3)}" width="${r.w.toFixed(3)}" height="${r.h.toFixed(3)}" rx="${(r.h*0.35).toFixed(3)}" fill="${fill}" opacity="${opacity}"/>`
+  const rects = (arr, fill, op) => arr.map(r =>
+    `<rect x="${r.x.toFixed(3)}" y="${r.y.toFixed(3)}" width="${r.w.toFixed(3)}" height="${r.h.toFixed(3)}" rx="${(Math.min(r.w,r.h)*0.18).toFixed(3)}" fill="${fill}" opacity="${op}"/>`
   ).join("");
 
   const circles = geo.cells.map(c =>
@@ -729,13 +613,13 @@ function exportSvgOneToOne(){
   const svg =
 `<svg xmlns="http://www.w3.org/2000/svg" width="${W}mm" height="${H}mm" viewBox="0 0 ${W} ${H}">
   <rect x="0" y="0" width="${W}" height="${H}" fill="#ffffff"/>
-  ${rects(geo.parallelPlates, "#b7b7b7", "0.55")}
-  ${rects(geo.seriesBridges, "#9e9e9e", "0.80")}
+  ${rects(geo.parallelNickel, "#b7b7b7", "0.55")}
+  ${rects(geo.seriesNickel, "#9e9e9e", "0.85")}
   ${circles}
   ${signs}
 </svg>`;
 
-  const blob = new Blob([svg], {type: "image/svg+xml"});
+  const blob = new Blob([svg], {type:"image/svg+xml"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -746,7 +630,7 @@ function exportSvgOneToOne(){
   URL.revokeObjectURL(url);
 }
 
-/* 3D View (Three.js) */
+/* 3D View (basic) */
 let three = { renderer:null, scene:null, camera:null, controls:null, anim:null };
 
 function open3D(){
@@ -775,12 +659,11 @@ function open3D(){
   dir.position.set(200, 300, 200);
   scene.add(dir);
 
-  const cx = geo.packW/2;
-  const cy = geo.packH/2;
+  const cx = geo.packW/2, cy = geo.packH/2;
 
-  const cellMat = new THREE.MeshStandardMaterial({color: 0x2a7f55, metalness:0.1, roughness:0.7});
-  const capMatP = new THREE.MeshStandardMaterial({color: 0xe6e6e6, metalness:0.6, roughness:0.25});
-  const capMatN = new THREE.MeshStandardMaterial({color: 0x888888, metalness:0.6, roughness:0.25});
+  const cellMat = new THREE.MeshStandardMaterial({color:0x2a7f55, metalness:0.1, roughness:0.7});
+  const capMatP = new THREE.MeshStandardMaterial({color:0xe6e6e6, metalness:0.6, roughness:0.25});
+  const capMatN = new THREE.MeshStandardMaterial({color:0x888888, metalness:0.6, roughness:0.25});
 
   for (const c of geo.cells){
     const cylGeo = new THREE.CylinderGeometry(c.r, c.r, geo.d, 40);
@@ -796,17 +679,15 @@ function open3D(){
     scene.add(disk);
   }
 
-  const nickelMat = new THREE.MeshStandardMaterial({color: 0xbdbdbd, metalness:0.7, roughness:0.25});
+  const nickelMat = new THREE.MeshStandardMaterial({color:0xbdbdbd, metalness:0.7, roughness:0.25});
   function addPlate(r, y){
     const g = new THREE.BoxGeometry(r.w, 0.8, r.h);
     const m = new THREE.Mesh(g, nickelMat);
-    const px = (r.x + r.w/2 - cx);
-    const pz = (r.y + r.h/2 - cy);
-    m.position.set(px, y, pz);
+    m.position.set((r.x + r.w/2 - cx), y, (r.y + r.h/2 - cy));
     scene.add(m);
   }
-  for (const r of geo.parallelPlates) addPlate(r, 1.2);
-  for (const r of geo.seriesBridges) addPlate(r, 2.2);
+  for (const r of geo.parallelNickel) addPlate(r, 1.2);
+  for (const r of geo.seriesNickel) addPlate(r, 2.2);
 
   function animate(){
     three.anim = requestAnimationFrame(animate);
@@ -821,47 +702,42 @@ function open3D(){
 function close3D(){
   el.threeWrap.classList.add("hidden");
   if (three.anim) cancelAnimationFrame(three.anim);
-  if (three.renderer){
-    try{ three.renderer.dispose?.(); } catch(e){}
-  }
-  el.threeContainer.innerHTML = "";
+  if (three.renderer){ try{ three.renderer.dispose?.(); }catch(e){} }
+  el.threeContainer.innerHTML="";
   three = { renderer:null, scene:null, camera:null, controls:null, anim:null };
 }
 
 /* events */
 el.packBtn.addEventListener("click", animateToLayout);
 el.backBtn.addEventListener("click", ()=>{
-  state.isAnimating = false;
-  el.packBtnFill.style.width = "0%";
-  el.packBtnPct.textContent = "0%";
-  el.packBtnState.textContent = "bereit";
-  el.packBtnText.textContent = "Tippen zum Laden & Layout öffnen";
+  state.isAnimating=false;
+  el.packBtnFill.style.width="0%";
+  el.packBtnPct.textContent="0%";
+  el.packBtnState.textContent="bereit";
+  el.packBtnText.textContent="Tippen zum Laden & Layout öffnen";
   el.packBtn.classList.remove("disabled");
   showPage("calc");
 });
-el.topBtn.addEventListener("click", ()=>setView("top"));
-el.bottomBtn.addEventListener("click", ()=>setView("bottom"));
+el.topBtn.addEventListener("click", ()=>{ state.view="top"; el.topBtn.classList.add("primary"); el.bottomBtn.classList.remove("primary"); drawLayout(); });
+el.bottomBtn.addEventListener("click", ()=>{ state.view="bottom"; el.bottomBtn.classList.add("primary"); el.topBtn.classList.remove("primary"); drawLayout(); });
 
 el.cellModel.addEventListener("change", updateCalc);
-el.series.addEventListener("input", updateCalc);
-el.parallel.addEventListener("input", updateCalc);
+el.series.addEventListener("input", ()=>{ updateCalc(); if(!el.pageLayout.classList.contains("hidden")) drawLayout(); });
+el.parallel.addEventListener("input", ()=>{ updateCalc(); if(!el.pageLayout.classList.contains("hidden")) drawLayout(); });
 
-el.viewMode.addEventListener("change", ()=>{
-  state.viewMode = el.viewMode.value;
-  resizeCanvas();
-  drawLayout();
-});
-el.nickelMm.addEventListener("input", ()=>{
-  state.nickelMm = Number(el.nickelMm.value) || 8;
-  drawLayout();
-});
-el.gapMm.addEventListener("input", ()=>{
-  state.gapMm = Number(el.gapMm.value) || 0.8;
-  drawLayout();
-});
+el.nickelMm.addEventListener("input", drawLayout);
+el.gapMm.addEventListener("input", drawLayout);
+el.nickelStyle.addEventListener("change", drawLayout);
+
 el.exportSvgBtn.addEventListener("click", exportSvgOneToOne);
 el.threeBtn.addEventListener("click", open3D);
 el.threeClose.addEventListener("click", close3D);
+
+window.addEventListener("resize", ()=>{
+  if(!el.pageLayout.classList.contains("hidden")){
+    resizeCanvas(); drawLayout();
+  }
+});
 
 /* init */
 fillDropdown();
