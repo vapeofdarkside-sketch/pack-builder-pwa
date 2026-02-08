@@ -184,24 +184,11 @@
         <label>Zell-Abstand (mm)</label>
         <input id="gapMm" type="number" min="0" max="3" step="0.1" value="0.6">
       </div>
-      <div class="col">
-        <label>Serien-Bridge Seite (für P>2)</label>
-        <select id="uBridgeSide">
-          <option value="auto" selected>Auto (oben/unten abwechselnd)</option>
-          <option value="right">Immer oben (Reihen 0/1)</option>
-          <option value="left">Immer unten (letzte 2 Reihen)</option>
-        </select>
-      </div>
     </div>
 
     <div class="row" style="margin-top:10px;">
       <div class="col"><button id="exportSvgBtn" class="btn primary" type="button">Export SVG (1:1)</button></div>
       <div class="col"><button id="threeBtn" class="btn" type="button">3D Ansicht</button></div>
-    </div>
-
-    <div class="small">
-      Serienbrücken werden <b>nur</b> als <b>2 horizontale Streifen</b> gezeichnet (Zellkappe→Zellkappe),
-      und zwar exakt wie deine Skizze: <b>TOP nur bei col=1,3,5…</b> und <b>BOTTOM nur bei col=0,2,4…</b>.
     </div>
   </div>
 
@@ -224,7 +211,7 @@
 <script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
-// build: 2026-02-08-skizze-series-only
+// build: 2026-02-08-clean-no-bridge-dropdown-wide-series
 
 const CELLS = [
   { id:"s35e",  name:"Samsung INR18650-35E",            format:"18650", mAh:3500, maxA:8,  nomV:3.6, fullV:4.2, note:"Hohe Kapazität, moderater Strom." },
@@ -272,7 +259,6 @@ const el = {
 
   nickelMm: document.getElementById("nickelMm"),
   gapMm: document.getElementById("gapMm"),
-  uBridgeSide: document.getElementById("uBridgeSide"),
 
   exportSvgBtn: document.getElementById("exportSvgBtn"),
   cv: document.getElementById("cv"),
@@ -492,8 +478,8 @@ function buildGeometryMm(){
     });
   }
 
-  // SERIES: zwei horizontale Streifen, Zellkappe->Zellkappe (wie echte Packs)
-  const lane = Math.max(4, r * 0.45);
+  // SERIES: genau wie Parallel breit (damit gleich aussieht)
+  const lane = nickelW;
 
   function addRect(x,y,w,h,rad=0){
     seriesNickel.push({x,y,w,h,rad});
@@ -511,25 +497,22 @@ function buildGeometryMm(){
     const x = cA0.x - nickelW/2;
     const w = (cA1.x - cA0.x) + nickelW;
 
-    addRect(x, cA0.y - lane/2, w, lane, lane*0.35);
-    addRect(x, cB0.y - lane/2, w, lane, lane*0.35);
+    addRect(x, cA0.y - lane/2, w, lane, lane*0.20);
+    addRect(x, cB0.y - lane/2, w, lane, lane*0.20);
   }
 
-  // Reihenpaar für Serienbrücke (für P=2: immer beide Reihen, wie dein 3S2P)
+  // Reihenpaar für Serienbrücke:
+  // P=2 -> immer beide Reihen (wie dein echtes 3S2P)
+  // P>2 -> automatisch abwechselnd oben/unten (ohne Dropdown)
   function chooseRowPair(col){
-    if(P === 1) return [0,0];
-    if(P === 2) return [0,1];
+    if (P === 1) return [0,0];
+    if (P === 2) return [0,1];
 
-    const side = el.uBridgeSide.value || "auto";
-    if(side === "right") return [0,1];
-    if(side === "left") return [P-2, P-1];
-
-    // auto: abwechselnd oben/unten
     const useTop = (col % 2 === 0);
     return useTop ? [0,1] : [P-2, P-1];
   }
 
-  // EXAKT WIE DEINE SKIZZE:
+  // EXAKT wie deine Skizze:
   // TOP: nur col=1,3,5...
   // BOTTOM: nur col=0,2,4...
   function shouldDrawSeriesOnThisView(col){
@@ -587,7 +570,7 @@ function drawLayout(){
   ctx.fillStyle="rgba(235,235,235,.78)";
   ctx.beginPath();
   for(const s of geo.seriesNickel){
-    const rad = (s.rad ?? (geo.lane*0.35)) * pxPerMm;
+    const rad = (s.rad ?? (geo.lane*0.20)) * pxPerMm;
     const rx = X(s.x), ry = Y(s.y), rw = s.w*pxPerMm, rh = s.h*pxPerMm;
     const rr = Math.max(2, Math.min(rad, Math.min(rw,rh)/2));
     ctx.moveTo(rx+rr, ry);
@@ -628,7 +611,7 @@ function exportSvgOneToOne(){
 
   const rects = (arr, fill, op) => arr.map(r =>
     `<rect x="${r.x.toFixed(3)}" y="${r.y.toFixed(3)}" width="${r.w.toFixed(3)}" height="${r.h.toFixed(3)}"
-      rx="${((r.rad ?? (geo.lane*0.35))).toFixed(3)}" fill="${fill}" opacity="${op}"/>`
+      rx="${((r.rad ?? (geo.lane*0.20))).toFixed(3)}" fill="${fill}" opacity="${op}"/>`
   ).join("");
 
   const circles = geo.cells.map(c =>
@@ -770,7 +753,6 @@ el.parallel.addEventListener("input", ()=>{ updateCalc(); if(!el.pageLayout.clas
 
 el.nickelMm.addEventListener("input", drawLayout);
 el.gapMm.addEventListener("input", drawLayout);
-el.uBridgeSide.addEventListener("change", drawLayout);
 
 el.exportSvgBtn.addEventListener("click", exportSvgOneToOne);
 
