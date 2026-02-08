@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
@@ -101,3 +101,663 @@
     <div class="row">
       <div class="col"><label>Vollspannung (V)</label><input id="fullV" disabled></div>
     </div>
+
+    <div class="small" id="cellNote"></div>
+  </div>
+
+  <div class="card">
+    <h3>Pack Konfiguration</h3>
+    <div class="row">
+      <div class="col"><label>Serien (S)</label><input type="number" id="series" value="3" min="1" max="24"></div>
+      <div class="col"><label>Parallel (P)</label><input type="number" id="parallel" value="2" min="1" max="24"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Zellen Info</h3>
+    <table id="cellInfo"></table>
+  </div>
+
+  <div class="card">
+    <h3>Pack Info</h3>
+    <table id="packInfo"></table>
+
+    <div class="batteryBtnWrap">
+      <div id="packBtn" class="batteryBtn">
+        <div id="packBtnFill" class="batteryFill"></div>
+        <div class="batteryContent">
+          <div>
+            <div class="batteryTitle">Pack konfigurieren</div>
+            <div id="packBtnText" class="batterySub">Tippen zum Laden & Layout öffnen</div>
+          </div>
+          <div class="batteryRight">
+            <div id="packBtnPct" class="batteryPct">0%</div>
+            <div id="packBtnState" class="batteryState">bereit</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div id="pageLayout" class="hidden">
+  <div class="topbar">
+    <button id="backBtn" class="btn">← Zurück</button>
+    <div class="seg">
+      <button id="topBtn" class="btn primary">Top</button>
+      <button id="bottomBtn" class="btn">Bottom</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Layout Einstellungen</h3>
+
+    <div class="row">
+      <div class="col">
+        <label>Nickelbreite (mm)</label>
+        <input id="nickelMm" type="number" min="4" max="20" step="0.5" value="8">
+      </div>
+      <div class="col">
+        <label>Zell-Abstand (mm)</label>
+        <input id="gapMm" type="number" min="0" max="3" step="0.1" value="0.6">
+      </div>
+      <div class="col">
+        <label>Nickel-Modus</label>
+        <select id="nickelMode">
+          <option value="real" selected>Real (P=2 Snake wie echtes Pack)</option>
+          <option value="simple">Simple (nur kleine Brücken)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <div class="col"><button id="exportSvgBtn" class="btn primary" type="button">Export SVG (1:1)</button></div>
+      <div class="col"><button id="threeBtn" class="btn" type="button">3D Ansicht</button></div>
+    </div>
+
+    <div class="small">
+      Top/Bottom zeigt jeweils die Seite. Bei <b>P=2</b> zeichnet „Real“ die Snake so wie bei deinem 3S2P Foto.
+    </div>
+  </div>
+
+  <div class="card canvasCard">
+    <canvas id="cv"></canvas>
+    <div class="small">
+      Hinweis: Für echte Packs immer BMS + Sicherung + Isolation verwenden.
+    </div>
+  </div>
+
+  <div id="threeWrap" class="card hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <h3 style="margin:0;">3D Ansicht</h3>
+      <button id="threeClose" class="btn" type="button">Schließen</button>
+    </div>
+    <div id="threeContainer" style="width:100%;height:420px;border-radius:12px;overflow:hidden;background:#0b0b0c;margin-top:10px;"></div>
+    <div class="small">Drehen: Touch/Drag. Zoomen: Pinch.</div>
+  </div>
+</div>
+
+<!-- Three.js (CDN) -->
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+/* -----------------------------
+   Cell DB
+------------------------------ */
+const CELLS = [
+  { id:"s35e",  name:"Samsung INR18650-35E",            format:"18650", mAh:3500, maxA:8,  nomV:3.6, fullV:4.2, note:"Hohe Kapazität, moderater Strom." },
+  { id:"vtc5a", name:"Sony/Murata Konion US18650VTC5A", format:"18650", mAh:2600, maxA:25, nomV:3.6, fullV:4.2, note:"Sehr hochstromfähig." },
+  { id:"vtc6",  name:"Sony/Murata Konion US18650VTC6",  format:"18650", mAh:3000, maxA:15, nomV:3.6, fullV:4.2, note:"Guter Allrounder." },
+  { id:"ga",    name:"Panasonic NCR18650GA",            format:"18650", mAh:3450, maxA:10, nomV:3.6, fullV:4.2, note:"Hohe Kapazität, solide." },
+  { id:"p28a",  name:"Molicel INR18650P28A",            format:"18650", mAh:2800, maxA:25, nomV:3.6, fullV:4.2, note:"Sehr stark (High Power)." },
+
+  { id:"30t207", name:"Samsung INR20700-30T",           format:"20700", mAh:3000, maxA:35, nomV:3.6, fullV:4.2, note:"20700 High Power." },
+
+  { id:"40t",   name:"Samsung INR21700-40T",            format:"21700", mAh:4000, maxA:35, nomV:3.6, fullV:4.2, note:"Sehr hochstromfähig." },
+  { id:"50e",   name:"Samsung INR21700-50E",            format:"21700", mAh:5000, maxA:9.8, nomV:3.6, fullV:4.2, note:"Sehr hohe Kapazität." },
+  { id:"p42a",  name:"Molicel INR21700P42A",            format:"21700", mAh:4200, maxA:30, nomV:3.6, fullV:4.2, note:"Top Allround (Power+Kapazität)." },
+  { id:"p45b",  name:"Molicel INR21700P45B",            format:"21700", mAh:4500, maxA:45, nomV:3.6, fullV:4.2, note:"Sehr stark (High Power)." }
+];
+
+const CELL_DIAM_MM = { "18650": 18.3, "20700": 20.3, "21700": 21.3 };
+
+const el = {
+  pageCalc: document.getElementById("pageCalc"),
+  pageLayout: document.getElementById("pageLayout"),
+
+  cellModel: document.getElementById("cellModel"),
+  format: document.getElementById("format"),
+  capacity: document.getElementById("capacity"),
+  maxA: document.getElementById("maxA"),
+  nomV: document.getElementById("nomV"),
+  fullV: document.getElementById("fullV"),
+  cellNote: document.getElementById("cellNote"),
+
+  series: document.getElementById("series"),
+  parallel: document.getElementById("parallel"),
+  cellInfo: document.getElementById("cellInfo"),
+  packInfo: document.getElementById("packInfo"),
+
+  packBtn: document.getElementById("packBtn"),
+  packBtnFill: document.getElementById("packBtnFill"),
+  packBtnPct: document.getElementById("packBtnPct"),
+  packBtnState: document.getElementById("packBtnState"),
+  packBtnText: document.getElementById("packBtnText"),
+
+  backBtn: document.getElementById("backBtn"),
+  topBtn: document.getElementById("topBtn"),
+  bottomBtn: document.getElementById("bottomBtn"),
+
+  nickelMm: document.getElementById("nickelMm"),
+  gapMm: document.getElementById("gapMm"),
+  nickelMode: document.getElementById("nickelMode"),
+  exportSvgBtn: document.getElementById("exportSvgBtn"),
+
+  cv: document.getElementById("cv"),
+
+  threeBtn: document.getElementById("threeBtn"),
+  threeWrap: document.getElementById("threeWrap"),
+  threeContainer: document.getElementById("threeContainer"),
+  threeClose: document.getElementById("threeClose"),
+};
+
+const state = {
+  view: "top",           // top | bottom
+  isAnimating: false,
+  // polarität: col0 oben +, col1 oben -, col2 oben + ... (passt zu 3S2P Foto)
+  flipPolarity: false
+};
+
+function clampInt(v, min, max, fallback){
+  const n = parseInt(v, 10);
+  if (Number.isNaN(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
+function fillDropdown(){
+  for(const c of CELLS){
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    el.cellModel.appendChild(opt);
+  }
+  el.cellModel.value = "s35e";
+}
+
+function getSelectedCell(){
+  return CELLS.find(c => c.id === el.cellModel.value) || CELLS[0];
+}
+function getCellDiamMm(){
+  const cell = getSelectedCell();
+  return CELL_DIAM_MM[cell.format] || 18.3;
+}
+
+/* plus/minus je nach spalte (serienrichtung links->rechts), und view top/bottom */
+function isPlus(row, col){
+  let plusTopBase = (col % 2 === 0);
+  if (state.flipPolarity) plusTopBase = !plusTopBase;
+  return state.view === "top" ? plusTopBase : !plusTopBase;
+}
+
+function updateCalc(){
+  const cell = getSelectedCell();
+  const S = clampInt(el.series.value, 1, 24, 3);
+  const P = clampInt(el.parallel.value, 1, 24, 2);
+  el.series.value = S;
+  el.parallel.value = P;
+
+  el.format.value = cell.format;
+  el.capacity.value = cell.mAh;
+  el.maxA.value = cell.maxA;
+  el.nomV.value = cell.nomV.toFixed(2);
+  el.fullV.value = cell.fullV.toFixed(2);
+  el.cellNote.textContent = cell.note || "";
+
+  const storageV=3.80, cutoffRec=3.30, cutoffAbs=3.00;
+
+  const packNomV=cell.nomV*S;
+  const packFullV=cell.fullV*S;
+  const packStorageV=storageV*S;
+  const packCutRec=cutoffRec*S;
+  const packCutAbs=cutoffAbs*S;
+
+  const packAh=(cell.mAh/1000)*P;
+  const packWh=packNomV*packAh;
+  const packMaxA=cell.maxA*P;
+
+  el.cellInfo.innerHTML=`
+    <tr><td>Modell</td><td>${cell.name}</td></tr>
+    <tr><td>Format</td><td>${cell.format}</td></tr>
+    <tr><td>Nominal</td><td>${cell.nomV.toFixed(2)} V</td></tr>
+    <tr><td>Voll</td><td>${cell.fullV.toFixed(2)} V</td></tr>
+    <tr><td>Kapazität</td><td>${cell.mAh} mAh</td></tr>
+    <tr><td>Max Dauerstrom</td><td>${cell.maxA} A</td></tr>
+  `;
+
+  el.packInfo.innerHTML=`
+    <tr><td>Konfiguration</td><td>${S}S${P}P</td></tr>
+    <tr><td>Zellen gesamt</td><td>${S*P}</td></tr>
+    <tr><td>Nominalspannung</td><td>${packNomV.toFixed(2)} V</td></tr>
+    <tr><td>Vollspannung</td><td>${packFullV.toFixed(2)} V</td></tr>
+    <tr><td class="green">Lagerspannung</td><td class="green">${packStorageV.toFixed(2)} V</td></tr>
+    <tr><td class="yellow">Entladen bis (empf.)</td><td class="yellow">${packCutRec.toFixed(2)} V</td></tr>
+    <tr><td class="red">Untergrenze (absolut)</td><td class="red">${packCutAbs.toFixed(2)} V</td></tr>
+    <tr><td>Kapazität</td><td>${packAh.toFixed(2)} Ah</td></tr>
+    <tr><td>Energie</td><td>${packWh.toFixed(1)} Wh</td></tr>
+    <tr><td>Max Dauerstrom</td><td>${packMaxA.toFixed(1)} A</td></tr>
+  `;
+
+  if(!state.isAnimating){
+    el.packBtnFill.style.width = "0%";
+    el.packBtnPct.textContent = "0%";
+    el.packBtnState.textContent = "bereit";
+    el.packBtnText.textContent = "Tippen zum Laden & Layout öffnen";
+    el.packBtn.classList.remove("disabled");
+  }
+}
+
+function showPage(which){
+  if(which === "layout"){
+    el.pageCalc.classList.add("hidden");
+    el.pageLayout.classList.remove("hidden");
+    window.scrollTo(0,0);
+    resizeCanvas();
+    drawLayout();
+  } else {
+    el.pageLayout.classList.add("hidden");
+    el.pageCalc.classList.remove("hidden");
+  }
+}
+
+/* Battery button animation */
+function animateToLayout(){
+  if(state.isAnimating) return;
+  state.isAnimating = true;
+
+  el.packBtn.classList.add("disabled");
+  el.packBtnState.textContent = "lädt…";
+  el.packBtnText.textContent = "Bitte warten";
+
+  const duration = 1200;
+  const start = performance.now();
+
+  function tick(now){
+    const t = Math.min(1, (now - start) / duration);
+    const pct = Math.round(t * 100);
+    el.packBtnFill.style.width = pct + "%";
+    el.packBtnPct.textContent = pct + "%";
+    if(t < 1) requestAnimationFrame(tick);
+    else{
+      el.packBtnState.textContent = "fertig";
+      el.packBtnText.textContent = "Layout wird geöffnet…";
+      setTimeout(()=>{ state.isAnimating=false; showPage("layout"); }, 180);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ---- drawing ---- */
+function roundRect(ctx, x, y, w, h, r){
+  const min = Math.min(w,h);
+  if(r > min/2) r = min/2;
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+function resizeCanvas(){
+  const cv = el.cv;
+  const rect = cv.getBoundingClientRect();
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+  const maxH = Math.floor(window.innerHeight * 0.55);
+  const targetH = Math.min(maxH, Math.floor(rect.width * 0.55));
+
+  cv.width  = Math.floor(rect.width * dpr);
+  cv.height = Math.floor(targetH * dpr);
+}
+
+window.addEventListener("resize", ()=>{
+  if(!el.pageLayout.classList.contains("hidden")){
+    resizeCanvas();
+    drawLayout();
+  }
+});
+
+/* ---- geometry in mm ---- */
+function buildGeometryMm(){
+  const cell = getSelectedCell();
+  const S = clampInt(el.series.value, 1, 24, 3);
+  const P = clampInt(el.parallel.value, 1, 24, 2);
+
+  const d = getCellDiamMm();
+  const r = d / 2;
+
+  const gap = Math.max(0, Number(el.gapMm.value) || 0.6);
+  const nickelW = Math.max(4, Number(el.nickelMm.value) || 8);
+
+  const packW = S * d + (S - 1) * gap;
+  const packH = P * d + (P - 1) * gap;
+
+  function cellCenterMm(row, col){
+    const x = r + col * (d + gap);
+    const y = r + row * (d + gap);
+    return {x,y};
+  }
+
+  const cells = [];
+  for(let row=0; row<P; row++){
+    for(let col=0; col<S; col++){
+      const c = cellCenterMm(row,col);
+      cells.push({row,col,x:c.x,y:c.y,r,plus:isPlus(row,col)});
+    }
+  }
+
+  const parallelNickel = [];
+  const seriesNickel = [];
+  const mode = el.nickelMode.value;
+
+  /* REAL MODE: P=2 -> wie echte Packs (3S2P Foto) */
+  if(mode === "real" && P === 2){
+    // 1) Parallel: vertikale Streifen pro Spalte (links/mitte/rechts)
+    for(let col=0; col<S; col++){
+      const t = cellCenterMm(0,col);
+      const b = cellCenterMm(1,col);
+      const stripW = nickelW;
+      const stripH = (b.y - t.y) + d*0.85; // deckt beide Kappen ab
+      parallelNickel.push({
+        x: t.x - stripW/2,
+        y: t.y - d*0.42,
+        w: stripW,
+        h: stripH
+      });
+    }
+
+    // 2) Series: echte Snake/Serpentine (oben rüber, runter, unten rüber, ...)
+    const lane = Math.max(4, r * 0.45); // dicke der Bahn
+
+    function addHoriz(row, colA, colB){
+      const a = cellCenterMm(row, colA);
+      const b = cellCenterMm(row, colB);
+      seriesNickel.push({
+        x: a.x + r*0.10,
+        y: a.y - lane/2,
+        w: (b.x - a.x) - r*0.20,
+        h: lane
+      });
+    }
+    function addVert(col){
+      const t = cellCenterMm(0,col);
+      const b = cellCenterMm(1,col);
+      seriesNickel.push({
+        x: t.x - lane/2,
+        y: t.y,
+        w: lane,
+        h: (b.y - t.y)
+      });
+    }
+
+    let row = 0; // start oben
+    for(let col=0; col<S-1; col++){
+      addHoriz(row, col, col+1);
+      if(col < S-2){
+        addVert(col+1); // drop im "Zwischen"-Block, wie bei echten Packs
+        row = 1 - row;
+      }
+    }
+  } else {
+    /* SIMPLE MODE (fallback) */
+    for(let col=0; col<S; col++){
+      for(let row=0; row<P-1; row++){
+        const a = cellCenterMm(row,col);
+        const b = cellCenterMm(row+1,col);
+        const plateW = Math.max(nickelW, r*1.25);
+        const plateH = (b.y - a.y) + r*0.25;
+        parallelNickel.push({x:a.x-plateW/2,y:a.y-r*0.10,w:plateW,h:plateH});
+      }
+    }
+    for(let col=0; col<S-1; col++){
+      const row = (col%2===0) ? 0 : (P-1);
+      const a = cellCenterMm(row,col);
+      const b = cellCenterMm(row,col+1);
+      const h = Math.max(4, r*0.45);
+      seriesNickel.push({x:a.x+r*0.35,y:a.y-h/2,w:(b.x-a.x)-r*0.7,h});
+    }
+  }
+
+  return {cell,S,P,d,r,gap,nickelW,packW,packH,cells,parallelNickel,seriesNickel};
+}
+
+function drawLayout(){
+  const geo = buildGeometryMm();
+  const cv = el.cv;
+  const ctx = cv.getContext("2d");
+  const w = cv.width, h = cv.height;
+
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#0b0b0c";
+  ctx.fillRect(0,0,w,h);
+
+  const padPx = Math.max(22, Math.floor(w * 0.04));
+  const availW = w - padPx*2;
+  const availH = h - padPx*2;
+
+  const pxPerMm = Math.min(availW/geo.packW, availH/geo.packH);
+  const offX = padPx + (availW - geo.packW*pxPerMm)/2;
+  const offY = padPx + (availH - geo.packH*pxPerMm)/2;
+
+  const X = mm => offX + mm*pxPerMm;
+  const Y = mm => offY + mm*pxPerMm;
+
+  // title
+  ctx.fillStyle="rgba(255,255,255,.88)";
+  ctx.font=`${Math.floor(w*0.05)}px Arial`;
+  ctx.textAlign="left";
+  ctx.textBaseline="top";
+  ctx.fillText(`${geo.S}S${geo.P}P — ${state.view.toUpperCase()} (Nickel)`, padPx, 10);
+
+  // Nickel
+  ctx.fillStyle="rgba(200,200,200,.38)";
+  for(const p of geo.parallelNickel){
+    roundRect(ctx, X(p.x), Y(p.y), p.w*pxPerMm, p.h*pxPerMm, Math.max(2, p.w*pxPerMm*0.18));
+    ctx.fill();
+  }
+  ctx.fillStyle="rgba(225,225,225,.72)";
+  for(const s of geo.seriesNickel){
+    roundRect(ctx, X(s.x), Y(s.y), s.w*pxPerMm, s.h*pxPerMm, Math.max(2, s.h*pxPerMm*0.35));
+    ctx.fill();
+  }
+
+  // Cells
+  for(const c of geo.cells){
+    const cx = X(c.x), cy = Y(c.y), rr = c.r*pxPerMm;
+
+    ctx.fillStyle="rgba(124,92,255,.10)";
+    ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2); ctx.fill();
+
+    ctx.strokeStyle="rgba(255,255,255,.12)";
+    ctx.lineWidth=Math.max(1, Math.floor(rr*0.10));
+    ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2); ctx.stroke();
+
+    ctx.fillStyle="rgba(255,255,255,.06)";
+    ctx.beginPath(); ctx.arc(cx,cy,Math.floor(rr*0.55),0,Math.PI*2); ctx.fill();
+
+    ctx.fillStyle=c.plus ? "rgba(255,255,255,.92)" : "rgba(255,255,255,.70)";
+    ctx.font=`${Math.floor(rr*0.95)}px Arial`;
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillText(c.plus?"+":"-", cx, cy);
+  }
+}
+
+/* SVG 1:1 */
+function exportSvgOneToOne(){
+  const geo = buildGeometryMm();
+  const title = `${geo.S}S${geo.P}P-${state.view}`;
+  const W = geo.packW, H = geo.packH;
+
+  const rects = (arr, fill, op) => arr.map(r =>
+    `<rect x="${r.x.toFixed(3)}" y="${r.y.toFixed(3)}" width="${r.w.toFixed(3)}" height="${r.h.toFixed(3)}"
+      rx="${(Math.min(r.w,r.h)*0.18).toFixed(3)}" fill="${fill}" opacity="${op}"/>`
+  ).join("");
+
+  const circles = geo.cells.map(c =>
+    `<circle cx="${c.x.toFixed(3)}" cy="${c.y.toFixed(3)}" r="${c.r.toFixed(3)}"
+      fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.3"/>`
+  ).join("");
+
+  const signs = geo.cells.map(c => {
+    const t = c.plus ? "+" : "-";
+    return `<text x="${c.x.toFixed(3)}" y="${(c.y+0.4).toFixed(3)}"
+      font-size="${(geo.d*0.35).toFixed(3)}" text-anchor="middle" fill="rgba(0,0,0,0.85)">${t}</text>`;
+  }).join("");
+
+  const svg =
+`<svg xmlns="http://www.w3.org/2000/svg" width="${W}mm" height="${H}mm" viewBox="0 0 ${W} ${H}">
+  <rect x="0" y="0" width="${W}" height="${H}" fill="#ffffff"/>
+  ${rects(geo.parallelNickel, "#b7b7b7", "0.55")}
+  ${rects(geo.seriesNickel, "#9e9e9e", "0.85")}
+  ${circles}
+  ${signs}
+</svg>`;
+
+  const blob = new Blob([svg], {type:"image/svg+xml"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${title}-1to1.svg`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* 3D (optional) */
+let three = { renderer:null, scene:null, camera:null, controls:null, anim:null };
+
+function open3D(){
+  el.threeWrap.classList.remove("hidden");
+  el.threeContainer.innerHTML = "";
+
+  const geo = buildGeometryMm();
+  const width = el.threeContainer.clientWidth;
+  const height = el.threeContainer.clientHeight;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b0b0c);
+
+  const camera = new THREE.PerspectiveCamera(45, width/height, 0.1, 5000);
+  camera.position.set(0, 120, 220);
+
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(width, height);
+  el.threeContainer.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+  dir.position.set(200, 300, 200);
+  scene.add(dir);
+
+  const cx = geo.packW/2, cy = geo.packH/2;
+
+  const cellMat = new THREE.MeshStandardMaterial({color:0x2a7f55, metalness:0.1, roughness:0.7});
+  const capMatP = new THREE.MeshStandardMaterial({color:0xe6e6e6, metalness:0.6, roughness:0.25});
+  const capMatN = new THREE.MeshStandardMaterial({color:0x888888, metalness:0.6, roughness:0.25});
+
+  for(const c of geo.cells){
+    const cylGeo = new THREE.CylinderGeometry(c.r, c.r, geo.d, 40);
+    const cyl = new THREE.Mesh(cylGeo, cellMat);
+    cyl.rotation.z = Math.PI/2;
+    cyl.position.set((c.x - cx), 0, (c.y - cy));
+    scene.add(cyl);
+
+    const diskGeo = new THREE.CylinderGeometry(c.r*0.55, c.r*0.55, 0.8, 32);
+    const disk = new THREE.Mesh(diskGeo, c.plus ? capMatP : capMatN);
+    disk.rotation.z = Math.PI/2;
+    disk.position.set((c.x - cx) + (geo.d/2), 0.6, (c.y - cy));
+    scene.add(disk);
+  }
+
+  const nickelMat = new THREE.MeshStandardMaterial({color:0xbdbdbd, metalness:0.7, roughness:0.25});
+  function addPlate(r, y){
+    const g = new THREE.BoxGeometry(r.w, 0.8, r.h);
+    const m = new THREE.Mesh(g, nickelMat);
+    m.position.set((r.x + r.w/2 - cx), y, (r.y + r.h/2 - cy));
+    scene.add(m);
+  }
+  for(const r of geo.parallelNickel) addPlate(r, 1.2);
+  for(const r of geo.seriesNickel) addPlate(r, 2.2);
+
+  function anim(){
+    three.anim = requestAnimationFrame(anim);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  anim();
+
+  three = { renderer, scene, camera, controls, anim: three.anim };
+}
+
+function close3D(){
+  el.threeWrap.classList.add("hidden");
+  if(three.anim) cancelAnimationFrame(three.anim);
+  try{ three.renderer?.dispose?.(); }catch(e){}
+  el.threeContainer.innerHTML = "";
+  three = { renderer:null, scene:null, camera:null, controls:null, anim:null };
+}
+
+/* events */
+el.packBtn.addEventListener("click", animateToLayout);
+
+el.backBtn.addEventListener("click", ()=>{
+  state.isAnimating = false;
+  el.packBtnFill.style.width="0%";
+  el.packBtnPct.textContent="0%";
+  el.packBtnState.textContent="bereit";
+  el.packBtnText.textContent="Tippen zum Laden & Layout öffnen";
+  el.packBtn.classList.remove("disabled");
+  showPage("calc");
+});
+
+el.topBtn.addEventListener("click", ()=>{
+  state.view="top";
+  el.topBtn.classList.add("primary");
+  el.bottomBtn.classList.remove("primary");
+  drawLayout();
+});
+el.bottomBtn.addEventListener("click", ()=>{
+  state.view="bottom";
+  el.bottomBtn.classList.add("primary");
+  el.topBtn.classList.remove("primary");
+  drawLayout();
+});
+
+el.cellModel.addEventListener("change", ()=>{ updateCalc(); if(!el.pageLayout.classList.contains("hidden")) drawLayout(); });
+el.series.addEventListener("input", ()=>{ updateCalc(); if(!el.pageLayout.classList.contains("hidden")) drawLayout(); });
+el.parallel.addEventListener("input", ()=>{ updateCalc(); if(!el.pageLayout.classList.contains("hidden")) drawLayout(); });
+
+el.nickelMm.addEventListener("input", drawLayout);
+el.gapMm.addEventListener("input", drawLayout);
+el.nickelMode.addEventListener("change", drawLayout);
+
+el.exportSvgBtn.addEventListener("click", exportSvgOneToOne);
+
+el.threeBtn.addEventListener("click", open3D);
+el.threeClose.addEventListener("click", close3D);
+
+/* init */
+fillDropdown();
+updateCalc();
+</script>
+</body>
+</html>
