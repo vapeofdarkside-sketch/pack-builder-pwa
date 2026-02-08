@@ -1,292 +1,162 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#111111" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <title>Pack Builder</title>
-  <style>
-    :root { --bg:#0f0f10; --card:#17181a; --text:#f2f2f2; --muted:#a7a7a7; --accent:#7c5cff; --nickel:#9ea0a6; }
-    *{box-sizing:border-box;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;}
-    body{margin:0;background:var(--bg);color:var(--text);}
-    header{padding:16px 16px 8px 16px;}
-    h1{margin:0;font-size:18px;font-weight:700;}
-    .wrap{padding:0 16px 16px 16px; display:grid; gap:12px;}
-    .card{background:var(--card); border-radius:14px; padding:12px; box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset;}
-    .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
-    .row + .row{margin-top:10px;}
-    label{font-size:13px;color:var(--muted);}
-    input[type="range"]{width:100%;}
-    .seg{display:flex; gap:8px;}
-    .btn{
-      flex:1; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);
-      background:#101114; color:var(--text); font-weight:700; font-size:13px;
-    }
-    .btn.active{border-color: rgba(124,92,255,0.7); background: rgba(124,92,255,0.12);}
-    .small{font-size:12px;color:var(--muted);}
-    canvas{width:100%; height:auto; border-radius:14px; background:#0b0b0c;}
-    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
-    .mono{font-variant-numeric: tabular-nums;}
-    .toggle{display:flex; align-items:center; gap:10px;}
-    .toggle input{transform: scale(1.1);}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pack Builder</title>
+
+<link rel="manifest" href="manifest.webmanifest" />
+
+<style>
+body {
+  background:#0e1117;
+  color:#fff;
+  font-family:Arial, sans-serif;
+  margin:0;
+  padding:20px;
+}
+
+h1 {
+  margin-top:0;
+}
+
+.card {
+  background:#161b22;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+}
+
+input, select {
+  width:100%;
+  padding:8px;
+  margin-top:5px;
+  margin-bottom:10px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+td {
+  padding:6px 0;
+}
+
+td:last-child {
+  text-align:right;
+}
+
+.green { color:#4caf50; }
+.yellow { color:#ffc107; }
+.red { color:#f44336; }
+</style>
 </head>
 <body>
-  <header>
-    <h1>Pack Builder (PWA)</h1>
-  </header>
 
-  <div class="wrap">
-    <div class="card">
-      <div class="row">
-        <div style="flex:1">
-          <label>S (Serie): <span class="mono" id="sVal">6</span></label>
-          <input id="s" type="range" min="1" max="20" step="1" value="6" />
-        </div>
-        <div style="flex:1">
-          <label>P (Parallel): <span class="mono" id="pVal">8</span></label>
-          <input id="p" type="range" min="1" max="20" step="1" value="8" />
-        </div>
-      </div>
+<h1>Battery Pack Calculator</h1>
 
-      <div class="row">
-        <div class="seg" style="flex:1">
-          <button id="topBtn" class="btn active">Top (Nickel)</button>
-          <button id="botBtn" class="btn">Bottom (Nickel)</button>
-        </div>
-      </div>
+<div class="card">
+  <h3>Zelltyp</h3>
 
-      <div class="row">
-        <div class="toggle">
-          <input id="mirrorBottom" type="checkbox" checked />
-          <label for="mirrorBottom">Bottom spiegeln</label>
-        </div>
-        <div class="toggle">
-          <input id="altBridges" type="checkbox" checked />
-          <label for="altBridges">Serienbrücken abwechselnd Top/Bottom</label>
-        </div>
-      </div>
+  <label>Format</label>
+  <select id="format">
+    <option value="18650">18650</option>
+    <option value="20700">20700</option>
+    <option value="21700">21700</option>
+  </select>
 
-      <div class="row grid2">
-        <div class="small mono" id="stats"></div>
-        <div class="small mono" id="hint">Top/Bottom zeigt dir die Nickelstreifen. Für echte Packs: BMS + Sicherung + Isolation.</div>
-      </div>
-    </div>
+  <label>Kapazität (mAh)</label>
+  <input type="number" id="capacity" value="3500">
 
-    <div class="card">
-      <canvas id="cv" width="1100" height="700"></canvas>
-      <div class="small" style="margin-top:10px;">
-        Darstellung: Zellen + Parallel-Nickel + Serien-U-Brücken (Serpentine). Top/Bottom blendet den jeweiligen Layer.
-      </div>
-    </div>
-  </div>
+  <label>Max. Dauerstrom (A)</label>
+  <input type="number" id="maxA" value="10">
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
-    }
+  <label>Nominalspannung (V)</label>
+  <input type="number" step="0.01" id="nomV" value="3.60">
 
-    const els = {
-      s: document.getElementById('s'),
-      p: document.getElementById('p'),
-      sVal: document.getElementById('sVal'),
-      pVal: document.getElementById('pVal'),
-      topBtn: document.getElementById('topBtn'),
-      botBtn: document.getElementById('botBtn'),
-      mirrorBottom: document.getElementById('mirrorBottom'),
-      altBridges: document.getElementById('altBridges'),
-      stats: document.getElementById('stats'),
-      cv: document.getElementById('cv'),
-    };
+  <label>Vollspannung (V)</label>
+  <input type="number" step="0.01" id="fullV" value="4.20">
+</div>
 
-    const state = {
-      side: 'top', // 'top' | 'bottom'
-      s: parseInt(els.s.value, 10),
-      p: parseInt(els.p.value, 10),
-      mirrorBottom: els.mirrorBottom.checked,
-      altBridges: els.altBridges.checked,
-      cell: { nominalV: 3.6, fullV: 4.2, mAh: 3500, maxA: 8, diaMM: 18.3 }, // Samsung 35E als Default
-    };
+<div class="card">
+  <h3>Pack Konfiguration</h3>
 
-    function setSide(side){
-      state.side = side;
-      els.topBtn.classList.toggle('active', side==='top');
-      els.botBtn.classList.toggle('active', side==='bottom');
-      draw();
-    }
+  <label>Serien (S)</label>
+  <input type="number" id="series" value="3">
 
-    els.topBtn.addEventListener('click', ()=>setSide('top'));
-    els.botBtn.addEventListener('click', ()=>setSide('bottom'));
-    els.s.addEventListener('input', ()=>{ state.s = parseInt(els.s.value,10); els.sVal.textContent = state.s; draw(); });
-    els.p.addEventListener('input', ()=>{ state.p = parseInt(els.p.value,10); els.pVal.textContent = state.p; draw(); });
-    els.mirrorBottom.addEventListener('change', ()=>{ state.mirrorBottom = els.mirrorBottom.checked; draw(); });
-    els.altBridges.addEventListener('change', ()=>{ state.altBridges = els.altBridges.checked; draw(); });
+  <label>Parallel (P)</label>
+  <input type="number" id="parallel" value="2">
+</div>
 
-    function packStats(){
-      const S = state.s, P = state.p;
-      const c = state.cell;
-      const packFullV = c.fullV * S;
-      const packNomV = c.nominalV * S;
-      const packAh = (c.mAh/1000) * P;
-      const packWh = packNomV * packAh;
-      const maxA = c.maxA * P;
-      return { packFullV, packNomV, packAh, packWh, maxA, cells: S*P };
-    }
+<div class="card">
+  <h3>Zellen Info</h3>
+  <table id="cellInfo"></table>
+</div>
 
-    function draw(){
-      const ctx = els.cv.getContext('2d');
-      const w = els.cv.width, h = els.cv.height;
-      ctx.clearRect(0,0,w,h);
+<div class="card">
+  <h3>Pack Info</h3>
+  <table id="packInfo"></table>
+</div>
 
-      // Background
-      ctx.fillStyle = '#0b0b0c';
-      ctx.fillRect(0,0,w,h);
+<script>
+function update() {
 
-      const {cells, packFullV, packNomV, packAh, packWh, maxA} = packStats();
-      els.stats.textContent =
-        `Zellen: ${cells} | Vvoll: ${packFullV.toFixed(2)} | Vnom: ${packNomV.toFixed(2)} | Ah: ${packAh.toFixed(2)} | Wh: ${packWh.toFixed(0)} | maxA: ${maxA.toFixed(0)}`;
+  const format = document.getElementById("format").value;
+  const capacity = parseFloat(document.getElementById("capacity").value);
+  const maxA = parseFloat(document.getElementById("maxA").value);
+  const nomV = parseFloat(document.getElementById("nomV").value);
+  const fullV = parseFloat(document.getElementById("fullV").value);
+  const S = parseInt(document.getElementById("series").value);
+  const P = parseInt(document.getElementById("parallel").value);
 
-      const pad = 70;
-      const rows = Math.max(1, state.s);
-      const cols = Math.max(1, state.p);
+  const storageV = 3.80;
+  const cutoffRec = 3.30;
+  const cutoffAbs = 3.00;
 
-      // Zell-Radius (UI)
-      const cellR = Math.min((w-2*pad)/(cols+3), (h-2*pad)/(rows+3)) * 0.55;
-      const dx = cellR * 2.25;
-      const dy = cellR * 2.05;
+  const totalCells = S * P;
 
-      function center(row, col){
-        const rowOffset = (row % 2 === 0) ? 0 : dx*0.5;
-        let x = pad + rowOffset + col*dx + cellR*2.2;
-        const y = pad + row*dy + cellR*2.2;
+  const packNomV = nomV * S;
+  const packFullV = fullV * S;
+  const packStorageV = storageV * S;
+  const packCutRec = cutoffRec * S;
+  const packCutAbs = cutoffAbs * S;
 
-        if (state.side === 'bottom' && state.mirrorBottom) {
-          x = w - x;
-        }
-        return {x, y};
-      }
+  const packAh = (capacity / 1000) * P;
+  const packWh = packNomV * packAh;
+  const packMaxA = maxA * P;
 
-      // Title
-      ctx.fillStyle = '#eaeaea';
-      ctx.font = 'bold 22px -apple-system,system-ui,Segoe UI,Roboto,Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(state.side === 'top' ? 'TOP (Nickel)' : 'BOTTOM (Nickel)', w/2, 38);
+  document.getElementById("cellInfo").innerHTML = `
+    <tr><td>Format</td><td>${format}</td></tr>
+    <tr><td>Nominal</td><td>${nomV.toFixed(2)} V</td></tr>
+    <tr><td>Voll</td><td>${fullV.toFixed(2)} V</td></tr>
+    <tr><td>Kapazität</td><td>${capacity} mAh</td></tr>
+    <tr><td>Max Strom</td><td>${maxA} A</td></tr>
+  `;
 
-      // Draw cells
-      for (let r=0; r<rows; r++){
-        for (let c=0; c<cols; c++){
-          const p = center(r,c);
-          ctx.beginPath();
-          ctx.strokeStyle = 'rgba(180,120,255,0.65)';
-          ctx.lineWidth = 3;
-          ctx.arc(p.x, p.y, cellR, 0, Math.PI*2);
-          ctx.stroke();
+  document.getElementById("packInfo").innerHTML = `
+    <tr><td>Konfiguration</td><td>${S}S${P}P</td></tr>
+    <tr><td>Zellen gesamt</td><td>${totalCells}</td></tr>
+    <tr><td>Nominalspannung</td><td>${packNomV.toFixed(2)} V</td></tr>
+    <tr><td>Vollspannung</td><td>${packFullV.toFixed(2)} V</td></tr>
+    <tr><td class="green">Lagerspannung</td><td class="green">${packStorageV.toFixed(2)} V</td></tr>
+    <tr><td class="yellow">Entladen bis (empf.)</td><td class="yellow">${packCutRec.toFixed(2)} V</td></tr>
+    <tr><td class="red">Absolute Untergrenze</td><td class="red">${packCutAbs.toFixed(2)} V</td></tr>
+    <tr><td>Kapazität</td><td>${packAh.toFixed(2)} Ah</td></tr>
+    <tr><td>Energie</td><td>${packWh.toFixed(1)} Wh</td></tr>
+    <tr><td>Max Dauerstrom</td><td>${packMaxA.toFixed(1)} A</td></tr>
+  `;
+}
 
-          // very faint +/-
-          const plusUp = (r % 2 === 0);
-          ctx.fillStyle = 'rgba(240,240,240,0.18)';
-          ctx.font = `bold ${Math.floor(cellR*1.0)}px -apple-system,system-ui`;
-          ctx.textAlign='center';
-          ctx.textBaseline='middle';
-          ctx.fillText(plusUp ? '+' : '–', p.x, p.y);
-        }
-      }
+document.querySelectorAll("input, select").forEach(el => {
+  el.addEventListener("input", update);
+});
 
-      // Nickel color
-      const nickel = 'rgba(158,160,166,0.75)';
-      const nickel2 = 'rgba(158,160,166,0.65)';
+update();
+</script>
 
-      // Parallel nickel strips (we show on both sides by default — like you wanted)
-      // We draw segmented rectangles over each cell in each row.
-      for (let r=0; r<rows; r++){
-        for (let c=0; c<cols; c++){
-          const p = center(r,c);
-          const segW = cellR*2.2;
-          const segH = cellR*0.9;
-          ctx.fillStyle = nickel2;
-          roundRect(ctx, p.x-segW/2, p.y-segH/2, segW, segH, 10);
-          ctx.fill();
-        }
-      }
-
-      // Side rails + (left) and - (right)
-      const topL = center(0,0);
-      const botL = center(rows-1,0);
-      const topR = center(0, cols-1);
-      const botR = center(rows-1, cols-1);
-
-      const railW = cellR*1.1;
-      const railYTop = Math.min(topL.y, topR.y) - cellR*1.1;
-      const railYBot = Math.max(botL.y, botR.y) + cellR*1.1;
-      const railH = railYBot - railYTop;
-
-      const railXLeft = Math.min(topL.x, botL.x) - cellR*2.0;
-      const railXRight = Math.max(topR.x, botR.x) + cellR*0.9;
-
-      ctx.fillStyle = nickel2;
-      roundRect(ctx, railXLeft, railYTop, railW, railH, 14); ctx.fill();
-      roundRect(ctx, railXRight, railYTop, railW, railH, 14); ctx.fill();
-
-      ctx.fillStyle = '#eaeaea';
-      ctx.font = 'bold 26px -apple-system,system-ui';
-      ctx.textAlign='center';
-      ctx.textBaseline='alphabetic';
-      ctx.fillText('+', railXLeft + railW/2, railYBot + 32);
-      ctx.fillText('–', railXRight + railW/2, railYBot + 32);
-
-      // Series bridges (U-shapes between rows), only those that belong to current side
-      // If altBridges = true, even bridges are top, odd are bottom
-      // else all on current side.
-      for (let r=0; r<rows-1; r++){
-        let bridgeSide = state.side;
-        if (state.altBridges){
-          bridgeSide = (r % 2 === 0) ? 'top' : 'bottom';
-        }
-        if (bridgeSide !== state.side) continue;
-
-        const connectRight = (r % 2 === 0);
-        const a = center(r, connectRight ? cols-1 : 0);
-        const d = center(r+1, connectRight ? cols-1 : 0);
-
-        const outX = connectRight ? Math.max(a.x,d.x) + cellR*1.4 : Math.min(a.x,d.x) - cellR*1.4;
-        const thick = cellR*0.75;
-
-        ctx.fillStyle = nickel;
-        // three rectangles approximate a thick U
-        rectFill(ctx, Math.min(a.x,outX), a.y-thick/2, Math.abs(outX-a.x), thick);
-        rectFill(ctx, outX-thick/2, Math.min(a.y,d.y), thick, Math.abs(d.y-a.y));
-        rectFill(ctx, Math.min(d.x,outX), d.y-thick/2, Math.abs(outX-d.x), thick);
-      }
-
-      // little footer info
-      ctx.fillStyle = 'rgba(220,220,220,0.65)';
-      ctx.font = '12px -apple-system,system-ui';
-      ctx.textAlign='center';
-      ctx.fillText('Serpentine: Reihe 0 links→rechts, Reihe 1 rechts→links, usw.', w/2, h-18);
-    }
-
-    // helpers
-    function rectFill(ctx,x,y,w,h){
-      ctx.beginPath();
-      ctx.rect(x,y,w,h);
-      ctx.fill();
-    }
-    function roundRect(ctx, x, y, w, h, r){
-      const min = Math.min(w,h);
-      if (r > min/2) r = min/2;
-      ctx.beginPath();
-      ctx.moveTo(x+r, y);
-      ctx.arcTo(x+w, y, x+w, y+h, r);
-      ctx.arcTo(x+w, y+h, x, y+h, r);
-      ctx.arcTo(x, y+h, x, y, r);
-      ctx.arcTo(x, y, x+w, y, r);
-      ctx.closePath();
-    }
-
-    draw();
-  </script>
 </body>
 </html>
