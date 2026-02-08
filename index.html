@@ -4,81 +4,62 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Pack Builder</title>
-
 <link rel="manifest" href="manifest.webmanifest" />
 
 <style>
-body {
-  background:#0e1117;
-  color:#fff;
-  font-family:Arial, sans-serif;
-  margin:0;
-  padding:20px;
-}
-
-h1 { margin-top:0; }
-
-.card {
-  background:#161b22;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
-}
-
-input, select {
-  width:100%;
-  padding:8px;
-  margin-top:5px;
-  margin-bottom:10px;
-  border-radius:8px;
-  border:none;
-  font-size:16px;
-  background:#0d1117;
-  color:#fff;
-}
-
-input[readonly] {
-  opacity:0.85;
-}
-
-.row {
-  display:flex;
-  gap:12px;
-}
-.col { flex:1; }
-
-table {
-  width:100%;
-  border-collapse:collapse;
-}
-
-td { padding:6px 0; }
-td:last-child { text-align:right; }
-
-.green { color:#4caf50; }
-.yellow { color:#ffc107; }
-.red { color:#f44336; }
-
-.small {
-  color:#9aa4 सुनिश्चित;
-  font-size:12px;
-  opacity:0.85;
-}
-
-.toggleRow{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-top:6px;
-}
-.toggleRow input{
-  width:auto;
-  margin:0;
-}
+  body{
+    background:#0e1117;
+    color:#fff;
+    font-family:Arial, sans-serif;
+    margin:0;
+    padding:20px;
+  }
+  h1{margin-top:0}
+  .card{
+    background:#161b22;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:15px;
+  }
+  .row{display:flex; gap:12px;}
+  .col{flex:1;}
+  label{
+    display:block;
+    margin-top:8px;
+    margin-bottom:6px;
+    font-size:13px;
+    opacity:.9;
+  }
+  input, select{
+    width:100%;
+    padding:9px;
+    border-radius:8px;
+    border:none;
+    font-size:16px;
+    background:#0d1117;
+    color:#fff;
+  }
+  input:disabled, select:disabled{
+    opacity:.85;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
+  td{padding:6px 0;}
+  td:last-child{text-align:right;}
+  .green{color:#4caf50;}
+  .yellow{color:#ffc107;}
+  .red{color:#f44336;}
+  .small{
+    font-size:12px;
+    opacity:0.8;
+    margin-top:8px;
+  }
 </style>
 </head>
-<body>
 
+<body>
 <h1>Battery Pack Calculator</h1>
 
 <div class="card">
@@ -87,45 +68,36 @@ td:last-child { text-align:right; }
   <label>Hersteller / Modell</label>
   <select id="cellModel"></select>
 
-  <div class="toggleRow">
-    <input type="checkbox" id="customMode">
-    <label for="customMode" class="small">Custom (Werte manuell ändern)</label>
-  </div>
-
   <div class="row">
     <div class="col">
       <label>Format</label>
-      <select id="format" disabled>
-        <option value="18650">18650</option>
-        <option value="20700">20700</option>
-        <option value="21700">21700</option>
-      </select>
+      <input id="format" disabled>
     </div>
     <div class="col">
       <label>Kapazität (mAh)</label>
-      <input type="number" id="capacity" readonly>
+      <input id="capacity" disabled>
     </div>
   </div>
 
   <div class="row">
     <div class="col">
       <label>Max. Dauerstrom (A)</label>
-      <input type="number" id="maxA" readonly>
+      <input id="maxA" disabled>
     </div>
     <div class="col">
       <label>Nominalspannung (V)</label>
-      <input type="number" step="0.01" id="nomV" readonly>
+      <input id="nomV" disabled>
     </div>
   </div>
 
   <div class="row">
     <div class="col">
       <label>Vollspannung (V)</label>
-      <input type="number" step="0.01" id="fullV" readonly>
+      <input id="fullV" disabled>
     </div>
     <div class="col">
       <label>Gewicht (g) (optional)</label>
-      <input type="number" step="0.1" id="weightG" readonly>
+      <input id="weightG" disabled>
     </div>
   </div>
 
@@ -158,32 +130,30 @@ td:last-child { text-align:right; }
 </div>
 
 <script>
-/**
- * Hinweis:
- * Gewichte sind optional und nicht immer exakt.
- * Spannungen: Li-Ion typisch nom 3.6V / voll 4.2V
- */
+/*
+  Fokus: 18650 / 20700 / 21700 (Li-Ion 4.2V)
+  Hinweis: maxA = Dauerstrom grob, in der Praxis abhängig von Temperatur/Herstellerdatenblatt.
+*/
 const CELLS = [
   // 18650
-  { id:"vtc5a", name:"Sony/Murata Konion US18650VTC5A", format:"18650", mAh:2600, maxA:25, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr hochstromfähig." },
-  { id:"vtc6",  name:"Sony/Murata Konion US18650VTC6",  format:"18650", mAh:3000, maxA:15, nomV:3.6, fullV:4.2, weightG:"", note:"Guter Allrounder." },
-  { id:"s35e",  name:"Samsung INR18650-35E",            format:"18650", mAh:3500, maxA:8,  nomV:3.6, fullV:4.2, weightG:"", note:"Hohe Kapazität, moderater Strom." },
-  { id:"ga",    name:"Panasonic NCR18650GA",            format:"18650", mAh:3450, maxA:10, nomV:3.6, fullV:4.2, weightG:"", note:"Hohe Kapazität, solide." },
-  { id:"p28a",  name:"Molicel INR18650P28A",            format:"18650", mAh:2800, maxA:25, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr stark (High Power)." },
+  { id:"s35e",  name:"Samsung INR18650-35E",             format:"18650", mAh:3500, maxA:8,  nomV:3.6, fullV:4.2, weightG:"", note:"Hohe Kapazität, moderater Strom." },
+  { id:"vtc5a", name:"Sony/Murata Konion US18650VTC5A",  format:"18650", mAh:2600, maxA:25, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr hochstromfähig." },
+  { id:"vtc6",  name:"Sony/Murata Konion US18650VTC6",   format:"18650", mAh:3000, maxA:15, nomV:3.6, fullV:4.2, weightG:"", note:"Guter Allrounder." },
+  { id:"ga",    name:"Panasonic NCR18650GA",             format:"18650", mAh:3450, maxA:10, nomV:3.6, fullV:4.2, weightG:"", note:"Hohe Kapazität, solide." },
+  { id:"p28a",  name:"Molicel INR18650P28A",             format:"18650", mAh:2800, maxA:25, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr stark (High Power)." },
+
+  // 20700
+  { id:"30t207", name:"Samsung INR20700-30T",            format:"20700", mAh:3000, maxA:35, nomV:3.6, fullV:4.2, weightG:"", note:"20700 High Power." },
 
   // 21700
-  { id:"40t",   name:"Samsung INR21700-40T",            format:"21700", mAh:4000, maxA:35, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr hochstromfähig." },
-  { id:"50e",   name:"Samsung INR21700-50E",            format:"21700", mAh:5000, maxA:9.8, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr hohe Kapazität." },
-  { id:"p42a",  name:"Molicel INR21700P42A",            format:"21700", mAh:4200, maxA:30, nomV:3.6, fullV:4.2, weightG:"", note:"Top Allround (Power+Kapazität)." },
-  { id:"p45b",  name:"Molicel INR21700P45B",            format:"21700", mAh:4500, maxA:45, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr stark (High Power)." },
-
-  // 20700 (weniger verbreitet, aber möglich)
-  { id:"30t207", name:"Samsung INR20700-30T",           format:"20700", mAh:3000, maxA:35, nomV:3.6, fullV:4.2, weightG:"", note:"20700 High Power." },
+  { id:"40t",   name:"Samsung INR21700-40T",             format:"21700", mAh:4000, maxA:35, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr hochstromfähig." },
+  { id:"50e",   name:"Samsung INR21700-50E",             format:"21700", mAh:5000, maxA:9.8, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr hohe Kapazität." },
+  { id:"p42a",  name:"Molicel INR21700P42A",             format:"21700", mAh:4200, maxA:30, nomV:3.6, fullV:4.2, weightG:"", note:"Top Allround (Power+Kapazität)." },
+  { id:"p45b",  name:"Molicel INR21700P45B",             format:"21700", mAh:4500, maxA:45, nomV:3.6, fullV:4.2, weightG:"", note:"Sehr stark (High Power)." },
 ];
 
 const el = {
   cellModel: document.getElementById("cellModel"),
-  customMode: document.getElementById("customMode"),
   format: document.getElementById("format"),
   capacity: document.getElementById("capacity"),
   maxA: document.getElementById("maxA"),
@@ -191,10 +161,8 @@ const el = {
   fullV: document.getElementById("fullV"),
   weightG: document.getElementById("weightG"),
   cellNote: document.getElementById("cellNote"),
-
   series: document.getElementById("series"),
   parallel: document.getElementById("parallel"),
-
   cellInfo: document.getElementById("cellInfo"),
   packInfo: document.getElementById("packInfo"),
 };
@@ -207,30 +175,12 @@ function fillModelDropdown(){
     opt.textContent = c.name;
     el.cellModel.appendChild(opt);
   }
-  // default
   el.cellModel.value = "s35e";
 }
 
 function getSelectedCell(){
   const id = el.cellModel.value;
   return CELLS.find(c => c.id === id) || CELLS[0];
-}
-
-function setReadonly(isReadonly){
-  for (const input of [el.capacity, el.maxA, el.nomV, el.fullV, el.weightG]){
-    input.readOnly = isReadonly;
-  }
-  el.format.disabled = true; // Format immer aus Modell, damit kein Mischmasch
-}
-
-function applyCellToFields(cell){
-  el.format.value = cell.format;
-  el.capacity.value = cell.mAh;
-  el.maxA.value = cell.maxA;
-  el.nomV.value = cell.nomV.toFixed(2);
-  el.fullV.value = cell.fullV.toFixed(2);
-  el.weightG.value = cell.weightG;
-  el.cellNote.textContent = cell.note ? ("Info: " + cell.note) : "";
 }
 
 function clampInt(v, min, max, fallback){
@@ -242,37 +192,30 @@ function clampInt(v, min, max, fallback){
 function update(){
   const cell = getSelectedCell();
 
+  // Set fields from model (locked)
+  el.format.value = cell.format;
+  el.capacity.value = cell.mAh;
+  el.maxA.value = cell.maxA;
+  el.nomV.value = cell.nomV.toFixed(2);
+  el.fullV.value = cell.fullV.toFixed(2);
+  el.weightG.value = cell.weightG;
+  el.cellNote.textContent = cell.note ? ("Info: " + cell.note) : "";
+
   // Pack inputs
   const S = clampInt(el.series.value, 1, 24, 3);
   const P = clampInt(el.parallel.value, 1, 24, 2);
   el.series.value = S;
   el.parallel.value = P;
 
-  // Either locked model values or custom edit
-  const custom = el.customMode.checked;
-  if (!custom){
-    setReadonly(true);
-    applyCellToFields(cell);
-  } else {
-    setReadonly(false);
-    // format still fixed by model, but values editable
-    el.format.value = cell.format;
-    el.capacity.value = el.capacity.value || cell.mAh;
-    el.maxA.value = el.maxA.value || cell.maxA;
-    el.nomV.value = el.nomV.value || cell.nomV;
-    el.fullV.value = el.fullV.value || cell.fullV;
-    el.cellNote.textContent = "Custom aktiv: Werte sind editierbar.";
-  }
+  const capacity = cell.mAh;
+  const maxA = cell.maxA;
+  const nomV = cell.nomV;
+  const fullV = cell.fullV;
 
-  const capacity = parseFloat(el.capacity.value);
-  const maxA = parseFloat(el.maxA.value);
-  const nomV = parseFloat(el.nomV.value);
-  const fullV = parseFloat(el.fullV.value);
-
-  // Fixed Li-Ion reference thresholds (can be made editable later)
-  const storageV = 3.80;
-  const cutoffRec = 3.30;
-  const cutoffAbs = 3.00;
+  // Li-Ion reference levels
+  const storageV = 3.80; // Lager
+  const cutoffRec = 3.30; // empfohlenes Entlade-Ende
+  const cutoffAbs = 3.00; // absolute Untergrenze
 
   const totalCells = S * P;
   const packNomV = nomV * S;
@@ -286,8 +229,8 @@ function update(){
   const packMaxA = maxA * P;
 
   el.cellInfo.innerHTML = `
-    <tr><td>Modell</td><td>${custom ? "Custom ("+cell.name+")" : cell.name}</td></tr>
-    <tr><td>Format</td><td>${el.format.value}</td></tr>
+    <tr><td>Modell</td><td>${cell.name}</td></tr>
+    <tr><td>Format</td><td>${cell.format}</td></tr>
     <tr><td>Nominal</td><td>${nomV.toFixed(2)} V</td></tr>
     <tr><td>Voll</td><td>${fullV.toFixed(2)} V</td></tr>
     <tr><td>Kapazität</td><td>${capacity.toFixed(0)} mAh</td></tr>
@@ -308,15 +251,10 @@ function update(){
   `;
 }
 
-// init
 fillModelDropdown();
 el.cellModel.addEventListener("change", update);
-el.customMode.addEventListener("change", update);
 el.series.addEventListener("input", update);
 el.parallel.addEventListener("input", update);
-for (const x of [el.capacity, el.maxA, el.nomV, el.fullV, el.weightG]) {
-  x.addEventListener("input", update);
-}
 update();
 </script>
 
