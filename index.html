@@ -748,9 +748,28 @@ el.bottomBtn.addEventListener("click", ()=>{
 });
 
 el.cellModel.addEventListener("change", ()=>{ updateCalc(); if(!el.pageLayout.classList.contains("hidden")) drawLayout(); });
-el.series.addEventListener("input", ()=>{ updateCalc(); if(!el.pageLayout.classList.contains("hidden")) drawLayout(); });
-el.parallel.addEventListener("input", ()=>{ updateCalc(); if(!el.pageLayout.classList.contains("hidden")) drawLayout(); });
+function onPackInput(){
+  updateCalc();
+  if(!el.pageLayout.classList.contains("hidden")) drawLayout();
+}
 
+["input","change","blur"].forEach(evt=>{
+  el.series.addEventListener(evt, onPackInput);
+  el.parallel.addEventListener(evt, onPackInput);
+});
+
+// iOS Fix: komplette Zahl markieren beim Antippen
+function selectAllOnFocus(e){
+  const t = e.target;
+  setTimeout(() => {
+    try { t.select(); } catch(_) {}
+  }, 0);
+}
+
+["focus","click"].forEach(evt=>{
+  el.series.addEventListener(evt, selectAllOnFocus);
+  el.parallel.addEventListener(evt, selectAllOnFocus);
+});
 el.nickelMm.addEventListener("input", drawLayout);
 el.gapMm.addEventListener("input", drawLayout);
 
