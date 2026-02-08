@@ -1,10 +1,11 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Pack Builder (PWA)</title>
 <link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#0e1117" />
 <style>
   :root{
     --bg:#0e1117; --card:#161b22; --field:#0d1117;
@@ -12,27 +13,31 @@
     --green:#4caf50; --yellow:#ffc107; --red:#f44336;
     --accent:#7c5cff;
   }
-  body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;margin:0;padding:20px;}
-  h1{margin:0 0 14px 0;}
-  .card{background:var(--card);padding:15px;border-radius:12px;margin-bottom:15px;}
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;margin:0;padding:18px;}
+  h1{margin:0 0 14px 0;font-size:22px;}
+  h3{margin:0 0 10px 0;}
+  .card{background:var(--card);padding:14px;border-radius:12px;margin-bottom:14px;}
   .row{display:flex;gap:12px;flex-wrap:wrap;}
   .col{flex:1;min-width:160px;}
   label{display:block;margin-top:8px;margin-bottom:6px;font-size:13px;opacity:.9;}
   input,select{
-    width:100%;padding:9px;border-radius:8px;border:none;font-size:16px;
+    width:100%;padding:10px;border-radius:10px;border:none;font-size:16px;
     background:var(--field);color:var(--text);
+    outline:none;
   }
-  input:disabled{opacity:.85;}
+  input:disabled{opacity:.9;}
   table{width:100%;border-collapse:collapse;}
-  td{padding:6px 0;} td:last-child{text-align:right;}
+  td{padding:6px 0;font-size:14px;}
+  td:last-child{text-align:right;}
   .green{color:var(--green);} .yellow{color:var(--yellow);} .red{color:var(--red);}
   .small{font-size:12px;opacity:.82;margin-top:8px;line-height:1.35;}
   .hidden{display:none;}
 
-  /* Battery button */
+  /* Battery Button */
   .batteryBtnWrap{margin-top:14px;display:flex;justify-content:center;}
   .batteryBtn{
-    position:relative;width:260px;height:74px;border-radius:18px;
+    position:relative;width:270px;height:76px;border-radius:18px;
     background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
     border:1px solid rgba(255,255,255,.10);
     overflow:hidden;cursor:pointer;user-select:none;
@@ -42,8 +47,7 @@
     content:"";position:absolute;right:-10px;top:24px;width:14px;height:26px;border-radius:6px;
     background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.10);
   }
-  .batteryFill{
-    position:absolute;left:0;top:0;bottom:0;width:0%;
+  .batteryFill{position:absolute;left:0;top:0;bottom:0;width:0%;
     background:linear-gradient(90deg, rgba(124,92,255,.85), rgba(124,92,255,.30));
   }
   .batteryContent{
@@ -58,7 +62,7 @@
   .batteryState{font-size:12px;opacity:.75;margin-top:2px;}
   .batteryBtn.disabled{cursor:default;opacity:.92;}
 
-  /* Layout page */
+  /* Layout Page */
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
   .btn{
     border:none;border-radius:10px;padding:10px 12px;
@@ -68,13 +72,24 @@
   .btn.primary{background:rgba(124,92,255,.20);border:1px solid rgba(124,92,255,.55);}
   .seg{display:flex;gap:10px;flex-wrap:wrap;}
   .seg .btn{min-width:110px;}
-  .canvasCard{padding:12px;}
+
   canvas{
     width:100%;
     height:auto;
     border-radius:12px;
     background:#0b0b0c;
     box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;
+  }
+
+  /* small badge (optional) */
+  .pill{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:999px;
+    background:rgba(124,92,255,.18);
+    border:1px solid rgba(124,92,255,.35);
+    font-size:12px;
+    font-weight:700;
   }
 </style>
 </head>
@@ -94,10 +109,12 @@
       <div class="col"><label>Format</label><input id="format" disabled></div>
       <div class="col"><label>Kapazität (mAh)</label><input id="capacity" disabled></div>
     </div>
+
     <div class="row">
       <div class="col"><label>Max. Dauerstrom (A)</label><input id="maxA" disabled></div>
       <div class="col"><label>Nominalspannung (V)</label><input id="nomV" disabled></div>
     </div>
+
     <div class="row">
       <div class="col"><label>Vollspannung (V)</label><input id="fullV" disabled></div>
     </div>
@@ -123,7 +140,7 @@
     <table id="packInfo"></table>
 
     <div class="batteryBtnWrap">
-      <div id="packBtn" class="batteryBtn">
+      <div id="packBtn" class="batteryBtn" title="Pack konfigurieren">
         <div id="packBtnFill" class="batteryFill"></div>
         <div class="batteryContent">
           <div>
@@ -138,6 +155,11 @@
       </div>
     </div>
 
+  </div>
+
+  <div class="small">
+    <span class="pill">Hinweis</span>
+    Für echte Packs immer BMS + Sicherung + Isolation verwenden.
   </div>
 </div>
 
@@ -164,10 +186,11 @@
         <input id="gapMm" type="number" min="0" max="3" step="0.1" value="0.6">
       </div>
       <div class="col">
-        <label>Nickel-Modus</label>
-        <select id="nickelMode">
-          <option value="real" selected>Real (P=2 Snake wie echtes Pack)</option>
-          <option value="simple">Simple (nur kleine Brücken)</option>
+        <label>U-Brücke Position</label>
+        <select id="uBridgeSide">
+          <option value="auto" selected>Auto (abwechselnd)</option>
+          <option value="right">Immer rechts</option>
+          <option value="left">Immer links</option>
         </select>
       </div>
     </div>
@@ -178,15 +201,13 @@
     </div>
 
     <div class="small">
-      Top/Bottom zeigt jeweils die Seite. Bei <b>P=2</b> zeichnet „Real“ die Snake so wie bei deinem 3S2P Foto.
+      Serienverbindung wird als <b>U-Brücke (2×2 Viereck)</b> gezeichnet und <b>rastet</b> auf den Parallel-Streifen ein.
+      Bei P&gt;2 werden die U-Brücken abwechselnd am <b>oberen</b> und <b>unteren</b> Rand gelegt (realistisch + übersichtlich).
     </div>
   </div>
 
-  <div class="card canvasCard">
+  <div class="card">
     <canvas id="cv"></canvas>
-    <div class="small">
-      Hinweis: Für echte Packs immer BMS + Sicherung + Isolation verwenden.
-    </div>
   </div>
 
   <div id="threeWrap" class="card hidden">
@@ -199,11 +220,14 @@
   </div>
 </div>
 
-<!-- Three.js (CDN) -->
+<!-- Three.js -->
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
+/* build stamp (hilft beim Cache-Check) */
+// build: 2026-02-08-REAL-UBRIDGE-SNAP-PGT2
+
 /* -----------------------------
    Cell DB
 ------------------------------ */
@@ -224,6 +248,9 @@ const CELLS = [
 
 const CELL_DIAM_MM = { "18650": 18.3, "20700": 20.3, "21700": 21.3 };
 
+/* -----------------------------
+   DOM
+------------------------------ */
 const el = {
   pageCalc: document.getElementById("pageCalc"),
   pageLayout: document.getElementById("pageLayout"),
@@ -253,9 +280,9 @@ const el = {
 
   nickelMm: document.getElementById("nickelMm"),
   gapMm: document.getElementById("gapMm"),
-  nickelMode: document.getElementById("nickelMode"),
-  exportSvgBtn: document.getElementById("exportSvgBtn"),
+  uBridgeSide: document.getElementById("uBridgeSide"),
 
+  exportSvgBtn: document.getElementById("exportSvgBtn"),
   cv: document.getElementById("cv"),
 
   threeBtn: document.getElementById("threeBtn"),
@@ -265,9 +292,10 @@ const el = {
 };
 
 const state = {
-  view: "top",           // top | bottom
+  view: "top",  // top|bottom
   isAnimating: false,
-  // polarität: col0 oben +, col1 oben -, col2 oben + ... (passt zu 3S2P Foto)
+  // Orientierung: Spalten alternieren (+/-) auf Top,
+  // damit "oben mehr +" möglich ist (wie bei deinen Beispielen)
   flipPolarity: false
 };
 
@@ -290,18 +318,23 @@ function fillDropdown(){
 function getSelectedCell(){
   return CELLS.find(c => c.id === el.cellModel.value) || CELLS[0];
 }
+
 function getCellDiamMm(){
   const cell = getSelectedCell();
   return CELL_DIAM_MM[cell.format] || 18.3;
 }
 
-/* plus/minus je nach spalte (serienrichtung links->rechts), und view top/bottom */
+/* Polung pro Spalte (Serpentine-typisch): Spalte 0 plus oben, 1 minus oben, 2 plus oben ...
+   Bottom ist invertiert. */
 function isPlus(row, col){
-  let plusTopBase = (col % 2 === 0);
-  if (state.flipPolarity) plusTopBase = !plusTopBase;
-  return state.view === "top" ? plusTopBase : !plusTopBase;
+  let plusTop = (col % 2 === 0);
+  if (state.flipPolarity) plusTop = !plusTop;
+  return state.view === "top" ? plusTop : !plusTop;
 }
 
+/* -----------------------------
+   Calculator Page
+------------------------------ */
 function updateCalc(){
   const cell = getSelectedCell();
   const S = clampInt(el.series.value, 1, 24, 3);
@@ -372,7 +405,6 @@ function showPage(which){
   }
 }
 
-/* Battery button animation */
 function animateToLayout(){
   if(state.isAnimating) return;
   state.isAnimating = true;
@@ -381,7 +413,7 @@ function animateToLayout(){
   el.packBtnState.textContent = "lädt…";
   el.packBtnText.textContent = "Bitte warten";
 
-  const duration = 1200;
+  const duration = 950;
   const start = performance.now();
 
   function tick(now){
@@ -393,13 +425,15 @@ function animateToLayout(){
     else{
       el.packBtnState.textContent = "fertig";
       el.packBtnText.textContent = "Layout wird geöffnet…";
-      setTimeout(()=>{ state.isAnimating=false; showPage("layout"); }, 180);
+      setTimeout(()=>{ state.isAnimating=false; showPage("layout"); }, 150);
     }
   }
   requestAnimationFrame(tick);
 }
 
-/* ---- drawing ---- */
+/* -----------------------------
+   Drawing helpers
+------------------------------ */
 function roundRect(ctx, x, y, w, h, r){
   const min = Math.min(w,h);
   if(r > min/2) r = min/2;
@@ -418,7 +452,7 @@ function resizeCanvas(){
   const dpr = Math.max(1, window.devicePixelRatio || 1);
 
   const maxH = Math.floor(window.innerHeight * 0.55);
-  const targetH = Math.min(maxH, Math.floor(rect.width * 0.55));
+  const targetH = Math.min(maxH, Math.floor(rect.width * 0.85));
 
   cv.width  = Math.floor(rect.width * dpr);
   cv.height = Math.floor(targetH * dpr);
@@ -431,7 +465,12 @@ window.addEventListener("resize", ()=>{
   }
 });
 
-/* ---- geometry in mm ---- */
+/* -----------------------------
+   Geometry (mm)
+   - Parallel strips: 1 strip per column connecting all rows (same polarity on this face)
+   - Series strips: U-bridges (2x2) "snapped" to parallel strips
+   - P>2: use row pairs at edges (0/1) then (P-2/P-1) alternating per bridge
+------------------------------ */
 function buildGeometryMm(){
   const cell = getSelectedCell();
   const S = clampInt(el.series.value, 1, 24, 3);
@@ -452,6 +491,10 @@ function buildGeometryMm(){
     return {x,y};
   }
 
+  // helpers: parallel strip X edges for a column (snapping)
+  function stripXLeft(col){ return cellCenterMm(0,col).x - nickelW/2; }
+  function stripXRight(col){ return cellCenterMm(0,col).x + nickelW/2; }
+
   const cells = [];
   for(let row=0; row<P; row++){
     for(let col=0; col<S; col++){
@@ -462,79 +505,108 @@ function buildGeometryMm(){
 
   const parallelNickel = [];
   const seriesNickel = [];
-  const mode = el.nickelMode.value;
 
-  /* REAL MODE: P=2 -> wie echte Packs (3S2P Foto) */
-  if(mode === "real" && P === 2){
-    // 1) Parallel: vertikale Streifen pro Spalte (links/mitte/rechts)
-    for(let col=0; col<S; col++){
-      const t = cellCenterMm(0,col);
-      const b = cellCenterMm(1,col);
-      const stripW = nickelW;
-      const stripH = (b.y - t.y) + d*0.85; // deckt beide Kappen ab
-      parallelNickel.push({
-        x: t.x - stripW/2,
-        y: t.y - d*0.42,
-        w: stripW,
-        h: stripH
-      });
-    }
+  /* 1) PARALLEL: 1 vertical strip per column spanning all rows */
+  for(let col=0; col<S; col++){
+    const top = cellCenterMm(0,col);
+    const bot = cellCenterMm(P-1,col);
+    const h = (bot.y - top.y) + d*0.85;
+    parallelNickel.push({
+      x: top.x - nickelW/2,
+      y: top.y - d*0.42,
+      w: nickelW,
+      h: h
+    });
+  }
 
-    // 2) Series: echte Snake/Serpentine (oben rüber, runter, unten rüber, ...)
-    const lane = Math.max(4, r * 0.45); // dicke der Bahn
+  /* 2) SERIES: U-bridges (2x2 square) between col and col+1
+        - choose row pair:
+          if P==1: no U-bridge possible -> fallback small horizontal
+          if P>=2:
+             for bridge index i=col:
+               rowPair = top edge (0,1) if i even, bottom edge (P-2,P-1) if i odd
+             (keeps layout clean & realistic)
+        - choose vertical leg side (left/right/auto)
+        - SNAP:
+          horizontals run from strip edge to strip edge
+          vertical leg runs on strip edge
+  */
+  const lane = Math.max(4, r * 0.45); // thickness of series strip
+  const uMode = el.uBridgeSide.value || "auto";
 
-    function addHoriz(row, colA, colB){
-      const a = cellCenterMm(row, colA);
-      const b = cellCenterMm(row, colB);
-      seriesNickel.push({
-        x: a.x + r*0.10,
-        y: a.y - lane/2,
-        w: (b.x - a.x) - r*0.20,
-        h: lane
-      });
-    }
-    function addVert(col){
-      const t = cellCenterMm(0,col);
-      const b = cellCenterMm(1,col);
-      seriesNickel.push({
-        x: t.x - lane/2,
-        y: t.y,
-        w: lane,
-        h: (b.y - t.y)
-      });
-    }
+  function addRect(x,y,w,h,rad=0){
+    seriesNickel.push({x,y,w,h,rad});
+  }
 
-    let row = 0; // start oben
+  function addUBridge(col, rowA, rowB, side){
+    // col connects to col+1
+    const c0 = col;
+    const c1 = col+1;
+
+    const yA = cellCenterMm(rowA, c0).y;
+    const yB = cellCenterMm(rowB, c0).y;
+
+    // top horizontal: from right edge of strip c0 to left edge of strip c1
+    const xTop = stripXRight(c0);
+    const wTop = stripXLeft(c1) - xTop;
+    addRect(xTop, yA - lane/2, wTop, lane, lane*0.35);
+
+    // bottom horizontal: from right edge of strip c0 to left edge of strip c1, but at yB
+    addRect(xTop, yB - lane/2, wTop, lane, lane*0.35);
+
+    // vertical leg:
+    // if side right -> on right edge of strip c1
+    // if side left  -> on left edge of strip c0
+    const vx = (side === "right") ? (stripXRight(c1) - lane/2) : (stripXLeft(c0) - lane/2);
+    const yMin = Math.min(yA, yB);
+    const vH = Math.abs(yB - yA);
+    addRect(vx, yMin, lane, vH, lane*0.35);
+  }
+
+  function addFallbackSeriesLine(col, row){
+    // for P==1: simple horizontal bridge between strips
+    const c0=col, c1=col+1;
+    const y = cellCenterMm(row, c0).y;
+    const x = stripXRight(c0);
+    const w = stripXLeft(c1) - x;
+    addRect(x, y - lane/2, w, lane, lane*0.35);
+  }
+
+  if (S >= 2){
     for(let col=0; col<S-1; col++){
-      addHoriz(row, col, col+1);
-      if(col < S-2){
-        addVert(col+1); // drop im "Zwischen"-Block, wie bei echten Packs
-        row = 1 - row;
+      let side;
+      if(uMode === "left") side="left";
+      else if(uMode === "right") side="right";
+      else side = (col % 2 === 0) ? "right" : "left"; // auto alternierend
+
+      if (P === 1){
+        addFallbackSeriesLine(col, 0);
+        continue;
       }
-    }
-  } else {
-    /* SIMPLE MODE (fallback) */
-    for(let col=0; col<S; col++){
-      for(let row=0; row<P-1; row++){
-        const a = cellCenterMm(row,col);
-        const b = cellCenterMm(row+1,col);
-        const plateW = Math.max(nickelW, r*1.25);
-        const plateH = (b.y - a.y) + r*0.25;
-        parallelNickel.push({x:a.x-plateW/2,y:a.y-r*0.10,w:plateW,h:plateH});
+
+      // choose edge row pair alternating per bridge
+      let rowA, rowB;
+      if (P === 2){
+        rowA = 0; rowB = 1;
+      } else {
+        const useTopEdge = (col % 2 === 0);
+        if (useTopEdge){
+          rowA = 0; rowB = 1;
+        } else {
+          rowA = P-2; rowB = P-1;
+        }
       }
-    }
-    for(let col=0; col<S-1; col++){
-      const row = (col%2===0) ? 0 : (P-1);
-      const a = cellCenterMm(row,col);
-      const b = cellCenterMm(row,col+1);
-      const h = Math.max(4, r*0.45);
-      seriesNickel.push({x:a.x+r*0.35,y:a.y-h/2,w:(b.x-a.x)-r*0.7,h});
+
+      addUBridge(col, rowA, rowB, side);
     }
   }
 
-  return {cell,S,P,d,r,gap,nickelW,packW,packH,cells,parallelNickel,seriesNickel};
+  return {cell,S,P,d,r,gap,nickelW,packW,packH,cells,parallelNickel,seriesNickel, lane};
 }
 
+/* -----------------------------
+   Canvas render
+------------------------------ */
 function drawLayout(){
   const geo = buildGeometryMm();
   const cv = el.cv;
@@ -545,7 +617,7 @@ function drawLayout(){
   ctx.fillStyle="#0b0b0c";
   ctx.fillRect(0,0,w,h);
 
-  const padPx = Math.max(22, Math.floor(w * 0.04));
+  const padPx = Math.max(18, Math.floor(w * 0.04));
   const availW = w - padPx*2;
   const availH = h - padPx*2;
 
@@ -556,22 +628,25 @@ function drawLayout(){
   const X = mm => offX + mm*pxPerMm;
   const Y = mm => offY + mm*pxPerMm;
 
-  // title
-  ctx.fillStyle="rgba(255,255,255,.88)";
-  ctx.font=`${Math.floor(w*0.05)}px Arial`;
+  // Title
+  ctx.fillStyle="rgba(255,255,255,.90)";
+  ctx.font=`${Math.floor(w*0.06)}px Arial`;
   ctx.textAlign="left";
   ctx.textBaseline="top";
   ctx.fillText(`${geo.S}S${geo.P}P — ${state.view.toUpperCase()} (Nickel)`, padPx, 10);
 
-  // Nickel
-  ctx.fillStyle="rgba(200,200,200,.38)";
+  // Nickel: parallel (under)
+  ctx.fillStyle="rgba(200,200,200,.28)";
   for(const p of geo.parallelNickel){
     roundRect(ctx, X(p.x), Y(p.y), p.w*pxPerMm, p.h*pxPerMm, Math.max(2, p.w*pxPerMm*0.18));
     ctx.fill();
   }
-  ctx.fillStyle="rgba(225,225,225,.72)";
+
+  // Nickel: series U-bridges (over)
+  ctx.fillStyle="rgba(235,235,235,.70)";
   for(const s of geo.seriesNickel){
-    roundRect(ctx, X(s.x), Y(s.y), s.w*pxPerMm, s.h*pxPerMm, Math.max(2, s.h*pxPerMm*0.35));
+    const rad = (s.rad ?? (geo.lane*0.35)) * pxPerMm;
+    roundRect(ctx, X(s.x), Y(s.y), s.w*pxPerMm, s.h*pxPerMm, Math.max(2, rad));
     ctx.fill();
   }
 
@@ -582,7 +657,7 @@ function drawLayout(){
     ctx.fillStyle="rgba(124,92,255,.10)";
     ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2); ctx.fill();
 
-    ctx.strokeStyle="rgba(255,255,255,.12)";
+    ctx.strokeStyle="rgba(255,255,255,.14)";
     ctx.lineWidth=Math.max(1, Math.floor(rr*0.10));
     ctx.beginPath(); ctx.arc(cx,cy,rr,0,Math.PI*2); ctx.stroke();
 
@@ -597,7 +672,9 @@ function drawLayout(){
   }
 }
 
-/* SVG 1:1 */
+/* -----------------------------
+   Export SVG 1:1
+------------------------------ */
 function exportSvgOneToOne(){
   const geo = buildGeometryMm();
   const title = `${geo.S}S${geo.P}P-${state.view}`;
@@ -605,7 +682,7 @@ function exportSvgOneToOne(){
 
   const rects = (arr, fill, op) => arr.map(r =>
     `<rect x="${r.x.toFixed(3)}" y="${r.y.toFixed(3)}" width="${r.w.toFixed(3)}" height="${r.h.toFixed(3)}"
-      rx="${(Math.min(r.w,r.h)*0.18).toFixed(3)}" fill="${fill}" opacity="${op}"/>`
+      rx="${((r.rad ?? (geo.lane*0.35))).toFixed(3)}" fill="${fill}" opacity="${op}"/>`
   ).join("");
 
   const circles = geo.cells.map(c =>
@@ -639,7 +716,9 @@ function exportSvgOneToOne(){
   URL.revokeObjectURL(url);
 }
 
-/* 3D (optional) */
+/* -----------------------------
+   3D (optional)
+------------------------------ */
 let three = { renderer:null, scene:null, camera:null, controls:null, anim:null };
 
 function open3D(){
@@ -654,7 +733,7 @@ function open3D(){
   scene.background = new THREE.Color(0x0b0b0c);
 
   const camera = new THREE.PerspectiveCamera(45, width/height, 0.1, 5000);
-  camera.position.set(0, 120, 220);
+  camera.position.set(0, 140, 240);
 
   const renderer = new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(width, height);
@@ -716,7 +795,9 @@ function close3D(){
   three = { renderer:null, scene:null, camera:null, controls:null, anim:null };
 }
 
-/* events */
+/* -----------------------------
+   Events
+------------------------------ */
 el.packBtn.addEventListener("click", animateToLayout);
 
 el.backBtn.addEventListener("click", ()=>{
@@ -748,14 +829,14 @@ el.parallel.addEventListener("input", ()=>{ updateCalc(); if(!el.pageLayout.clas
 
 el.nickelMm.addEventListener("input", drawLayout);
 el.gapMm.addEventListener("input", drawLayout);
-el.nickelMode.addEventListener("change", drawLayout);
+el.uBridgeSide.addEventListener("change", drawLayout);
 
 el.exportSvgBtn.addEventListener("click", exportSvgOneToOne);
 
 el.threeBtn.addEventListener("click", open3D);
 el.threeClose.addEventListener("click", close3D);
 
-/* init */
+/* Init */
 fillDropdown();
 updateCalc();
 </script>
