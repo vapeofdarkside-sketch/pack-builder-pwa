@@ -7,65 +7,63 @@
 <link rel="manifest" href="manifest.webmanifest" />
 
 <style>
-  body{
-    background:#0e1117;
-    color:#fff;
-    font-family:Arial, sans-serif;
-    margin:0;
-    padding:20px;
-  }
+body{
+  background:#0e1117;
+  color:#fff;
+  font-family:Arial, sans-serif;
+  margin:0;
+  padding:20px;
+}
 
-  h1{margin-top:0}
+h1{margin-top:0}
 
-  .card{
-    background:#161b22;
-    padding:15px;
-    border-radius:12px;
-    margin-bottom:15px;
-  }
+.card{
+  background:#161b22;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+}
 
-  .row{display:flex; gap:12px;}
-  .col{flex:1;}
+.row{display:flex; gap:12px;}
+.col{flex:1;}
 
-  label{
-    display:block;
-    margin-top:8px;
-    margin-bottom:6px;
-    font-size:13px;
-    opacity:.9;
-  }
+label{
+  display:block;
+  margin-top:8px;
+  margin-bottom:6px;
+  font-size:13px;
+  opacity:.9;
+}
 
-  input, select{
-    width:100%;
-    padding:9px;
-    border-radius:8px;
-    border:none;
-    font-size:16px;
-    background:#0d1117;
-    color:#fff;
-  }
+input, select{
+  width:100%;
+  padding:9px;
+  border-radius:8px;
+  border:none;
+  font-size:16px;
+  background:#0d1117;
+  color:#fff;
+}
 
-  input:disabled{
-    opacity:.85;
-  }
+input:disabled{opacity:.85;}
 
-  table{
-    width:100%;
-    border-collapse:collapse;
-  }
+table{
+  width:100%;
+  border-collapse:collapse;
+}
 
-  td{padding:6px 0;}
-  td:last-child{text-align:right;}
+td{padding:6px 0;}
+td:last-child{text-align:right;}
 
-  .green{color:#4caf50;}
-  .yellow{color:#ffc107;}
-  .red{color:#f44336;}
+.green{color:#4caf50;}
+.yellow{color:#ffc107;}
+.red{color:#f44336;}
 
-  .small{
-    font-size:12px;
-    opacity:0.8;
-    margin-top:8px;
-  }
+.small{
+  font-size:12px;
+  opacity:0.8;
+  margin-top:8px;
+}
 </style>
 </head>
 
@@ -178,6 +176,7 @@ function fillDropdown(){
 
 function update(){
   const cell=CELLS.find(c=>c.id===el.cellModel.value);
+
   const S=Math.max(1,Math.min(24,parseInt(el.series.value)||1));
   const P=Math.max(1,Math.min(24,parseInt(el.parallel.value)||1));
 
