@@ -124,8 +124,15 @@
   <div class="card">
     <h3>Pack Konfiguration</h3>
     <div class="row">
-      <div class="col"><label>Serien (S)</label><input type="number" id="series" value="3" min="1" max="24"></div>
-      <div class="col"><label>Parallel (P)</label><input type="number" id="parallel" value="2" min="1" max="24"></div>
+      <div class="col">
+        <label>Serien (S)</label>
+        <!-- iOS-sicher: text + numeric keyboard -->
+        <input id="series" type="text" value="3" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+      </div>
+      <div class="col">
+        <label>Parallel (P)</label>
+        <input id="parallel" type="text" value="2" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+      </div>
     </div>
   </div>
 
@@ -211,7 +218,7 @@
 <script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
-// build: 2026-02-08-clean-no-bridge-dropdown-wide-series
+// build: 2026-02-08-ios-pack-input-fix
 
 const CELLS = [
   { id:"s35e",  name:"Samsung INR18650-35E",            format:"18650", mAh:3500, maxA:8,  nomV:3.6, fullV:4.2, note:"Hohe Kapazität, moderater Strom." },
@@ -219,9 +226,7 @@ const CELLS = [
   { id:"vtc6",  name:"Sony/Murata Konion US18650VTC6",  format:"18650", mAh:3000, maxA:15, nomV:3.6, fullV:4.2, note:"Guter Allrounder." },
   { id:"ga",    name:"Panasonic NCR18650GA",            format:"18650", mAh:3450, maxA:10, nomV:3.6, fullV:4.2, note:"Hohe Kapazität, solide." },
   { id:"p28a",  name:"Molicel INR18650P28A",            format:"18650", mAh:2800, maxA:25, nomV:3.6, fullV:4.2, note:"Sehr stark (High Power)." },
-
   { id:"30t207", name:"Samsung INR20700-30T",           format:"20700", mAh:3000, maxA:35, nomV:3.6, fullV:4.2, note:"20700 High Power." },
-
   { id:"40t",   name:"Samsung INR21700-40T",            format:"21700", mAh:4000, maxA:35, nomV:3.6, fullV:4.2, note:"Sehr hochstromfähig." },
   { id:"50e",   name:"Samsung INR21700-50E",            format:"21700", mAh:5000, maxA:9.8, nomV:3.6, fullV:4.2, note:"Sehr hohe Kapazität." },
   { id:"p42a",  name:"Molicel INR21700P42A",            format:"21700", mAh:4200, maxA:30, nomV:3.6, fullV:4.2, note:"Top Allround (Power+Kapazität)." },
@@ -269,11 +274,7 @@ const el = {
   threeClose: document.getElementById("threeClose"),
 };
 
-const state = {
-  view: "top",
-  isAnimating: false,
-  flipPolarity: false
-};
+const state = { view:"top", isAnimating:false, flipPolarity:false };
 
 function clampInt(v, min, max, fallback){
   const n = parseInt(v, 10);
@@ -291,14 +292,8 @@ function fillDropdown(){
   el.cellModel.value = "s35e";
 }
 
-function getSelectedCell(){
-  return CELLS.find(c => c.id === el.cellModel.value) || CELLS[0];
-}
-
-function getCellDiamMm(){
-  const cell = getSelectedCell();
-  return CELL_DIAM_MM[cell.format] || 18.3;
-}
+function getSelectedCell(){ return CELLS.find(c => c.id === el.cellModel.value) || CELLS[0]; }
+function getCellDiamMm(){ const cell = getSelectedCell(); return CELL_DIAM_MM[cell.format] || 18.3; }
 
 // Polung pro Spalte: 0 plus oben, 1 minus oben, 2 plus oben...
 function isPlus(row, col){
@@ -307,12 +302,47 @@ function isPlus(row, col){
   return state.view === "top" ? plusTop : !plusTop;
 }
 
+/* ===== iOS-sichere Pack Input Logik (wichtig!) ===== */
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+function parsePackVal(str, fallback){
+  const digits = (str || "").replace(/[^\d]/g, "");
+  if(!digits) return fallback;
+  return clamp(parseInt(digits, 10), 1, 24);
+}
+function syncPackInputs(){
+  const s = parsePackVal(el.series.value, 3);
+  const p = parsePackVal(el.parallel.value, 2);
+  el.series.value = String(s);
+  el.parallel.value = String(p);
+  updateCalc();
+  if(!el.pageLayout.classList.contains("hidden")) drawLayout();
+}
+function selectAllOnFocus(e){
+  const t = e.target;
+  setTimeout(() => {
+    try{
+      t.focus();
+      t.setSelectionRange(0, t.value.length);
+    }catch(_){}
+  }, 0);
+}
+function clearOnFirstDigit(e){
+  const t = e.target;
+  if(t.dataset._cleared === "1") return;
+  const allSelected = (t.selectionStart === 0 && t.selectionEnd === t.value.length);
+  if(allSelected){
+    t.value = "";
+    t.dataset._cleared = "1";
+  }
+}
+/* ===== Ende iOS Pack Input ===== */
+
 function updateCalc(){
   const cell = getSelectedCell();
   const S = clampInt(el.series.value, 1, 24, 3);
   const P = clampInt(el.parallel.value, 1, 24, 2);
-  el.series.value = S;
-  el.parallel.value = P;
+  el.series.value = String(S);
+  el.parallel.value = String(P);
 
   el.format.value = cell.format;
   el.capacity.value = cell.mAh;
@@ -464,7 +494,7 @@ function buildGeometryMm(){
   const parallelNickel = [];
   const seriesNickel = [];
 
-  // PARALLEL (immer): vertical strip per column
+  // Parallel (immer): vertical strip per column
   for(let col=0; col<S; col++){
     const top = cellCenterMm(0,col);
     const bot = cellCenterMm(P-1,col);
@@ -478,7 +508,7 @@ function buildGeometryMm(){
     });
   }
 
-  // SERIES: genau wie Parallel breit (damit gleich aussieht)
+  // Series: gleiche Breite wie Parallel
   const lane = nickelW;
 
   function addRect(x,y,w,h,rad=0){
@@ -501,20 +531,16 @@ function buildGeometryMm(){
     addRect(x, cB0.y - lane/2, w, lane, lane*0.20);
   }
 
-  // Reihenpaar für Serienbrücke:
-  // P=2 -> immer beide Reihen (wie dein echtes 3S2P)
-  // P>2 -> automatisch abwechselnd oben/unten (ohne Dropdown)
   function chooseRowPair(col){
     if (P === 1) return [0,0];
     if (P === 2) return [0,1];
-
     const useTop = (col % 2 === 0);
     return useTop ? [0,1] : [P-2, P-1];
   }
 
-  // EXAKT wie deine Skizze:
-  // TOP: nur col=1,3,5...
-  // BOTTOM: nur col=0,2,4...
+  // wie deine Skizze:
+  // TOP: col 1,3,5...
+  // BOTTOM: col 0,2,4...
   function shouldDrawSeriesOnThisView(col){
     const seriesOnTop = (col % 2 === 1);
     return (state.view === "top" && seriesOnTop) || (state.view === "bottom" && !seriesOnTop);
@@ -552,21 +578,20 @@ function drawLayout(){
   const X = mm => offX + mm*pxPerMm;
   const Y = mm => offY + mm*pxPerMm;
 
-  // Title
   ctx.fillStyle="rgba(255,255,255,.90)";
   ctx.font=`${Math.floor(w*0.06)}px Arial`;
   ctx.textAlign="left";
   ctx.textBaseline="top";
   ctx.fillText(`${geo.S}S${geo.P}P — ${state.view.toUpperCase()} (Nickel)`, padPx, 10);
 
-  // Parallel (immer)
+  // Parallel
   ctx.fillStyle="rgba(200,200,200,.28)";
   for(const p of geo.parallelNickel){
     roundRect(ctx, X(p.x), Y(p.y), p.w*pxPerMm, p.h*pxPerMm, Math.max(2, (p.rad||2)*pxPerMm));
     ctx.fill();
   }
 
-  // Series (single layer)
+  // Series
   ctx.fillStyle="rgba(235,235,235,.78)";
   ctx.beginPath();
   for(const s of geo.seriesNickel){
@@ -722,6 +747,7 @@ function close3D(){
   three = { renderer:null, scene:null, camera:null, controls:null, anim:null };
 }
 
+/* ===== Events ===== */
 el.packBtn.addEventListener("click", animateToLayout);
 
 el.backBtn.addEventListener("click", ()=>{
@@ -747,29 +773,24 @@ el.bottomBtn.addEventListener("click", ()=>{
   drawLayout();
 });
 
-el.cellModel.addEventListener("change", ()=>{ updateCalc(); if(!el.pageLayout.classList.contains("hidden")) drawLayout(); });
-function onPackInput(){
+el.cellModel.addEventListener("change", ()=>{
   updateCalc();
   if(!el.pageLayout.classList.contains("hidden")) drawLayout();
-}
-
-["input","change","blur"].forEach(evt=>{
-  el.series.addEventListener(evt, onPackInput);
-  el.parallel.addEventListener(evt, onPackInput);
 });
 
-// iOS Fix: komplette Zahl markieren beim Antippen
-function selectAllOnFocus(e){
-  const t = e.target;
-  setTimeout(() => {
-    try { t.select(); } catch(_) {}
-  }, 0);
-}
-
+// iOS Pack Input Events
 ["focus","click"].forEach(evt=>{
   el.series.addEventListener(evt, selectAllOnFocus);
   el.parallel.addEventListener(evt, selectAllOnFocus);
 });
+el.series.addEventListener("keydown", clearOnFirstDigit);
+el.parallel.addEventListener("keydown", clearOnFirstDigit);
+
+["input","change","blur"].forEach(evt=>{
+  el.series.addEventListener(evt, ()=>{ el.series.dataset._cleared="0"; syncPackInputs(); });
+  el.parallel.addEventListener(evt, ()=>{ el.parallel.dataset._cleared="0"; syncPackInputs(); });
+});
+
 el.nickelMm.addEventListener("input", drawLayout);
 el.gapMm.addEventListener("input", drawLayout);
 
