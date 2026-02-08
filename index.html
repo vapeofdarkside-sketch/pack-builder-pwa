@@ -12,7 +12,6 @@
     --card:#161b22;
     --field:#0d1117;
     --text:#ffffff;
-    --muted:rgba(255,255,255,.75);
     --green:#4caf50;
     --yellow:#ffc107;
     --red:#f44336;
@@ -61,18 +60,14 @@
     font-size:12px;
     opacity:0.8;
     margin-top:8px;
+    line-height:1.35;
   }
 
-  /* --- Battery Button (Pack konfigurieren) --- */
-  .batteryBtnWrap{
-    margin-top:14px;
-    display:flex;
-    justify-content:center;
-  }
+  /* Battery Button */
+  .batteryBtnWrap{margin-top:14px; display:flex; justify-content:center;}
   .batteryBtn{
     position:relative;
-    width:260px;
-    height:74px;
+    width:260px; height:74px;
     border-radius:18px;
     background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
     border:1px solid rgba(255,255,255,.10);
@@ -84,23 +79,19 @@
   .batteryBtn::before{
     content:"";
     position:absolute;
-    right:-10px;
-    top:24px;
-    width:14px;
-    height:26px;
+    right:-10px; top:24px;
+    width:14px; height:26px;
     border-radius:6px;
     background:rgba(255,255,255,.16);
     border:1px solid rgba(255,255,255,.10);
   }
   .batteryFill{
-    position:absolute;
-    left:0; top:0; bottom:0;
+    position:absolute; left:0; top:0; bottom:0;
     width:0%;
     background:linear-gradient(90deg, rgba(124,92,255,.85), rgba(124,92,255,.30));
   }
   .batteryContent{
-    position:relative;
-    z-index:2;
+    position:relative; z-index:2;
     height:100%;
     display:flex;
     align-items:center;
@@ -108,38 +99,16 @@
     padding:0 14px;
     gap:10px;
   }
-  .batteryTitle{
-    font-weight:800;
-    font-size:14px;
-    letter-spacing:.2px;
-  }
-  .batterySub{
-    font-size:12px;
-    opacity:.78;
-    margin-top:2px;
-  }
-  .batteryRight{
-    text-align:right;
-    font-variant-numeric:tabular-nums;
-  }
-  .batteryPct{
-    font-weight:900;
-    font-size:16px;
-  }
-  .batteryState{
-    font-size:12px;
-    opacity:.75;
-    margin-top:2px;
-  }
-  .batteryBtn.disabled{
-    cursor:default;
-    opacity:.92;
-  }
+  .batteryTitle{font-weight:800; font-size:14px;}
+  .batterySub{font-size:12px; opacity:.78; margin-top:2px;}
+  .batteryRight{text-align:right; font-variant-numeric:tabular-nums;}
+  .batteryPct{font-weight:900; font-size:16px;}
+  .batteryState{font-size:12px; opacity:.75; margin-top:2px;}
+  .batteryBtn.disabled{cursor:default; opacity:.92;}
 
-  /* --- Page switching --- */
   .hidden{display:none;}
 
-  /* --- Layout page --- */
+  /* Layout page */
   .topbar{
     display:flex;
     align-items:center;
@@ -160,13 +129,9 @@
     background:rgba(124,92,255,.20);
     border:1px solid rgba(124,92,255,.55);
   }
-  .seg{
-    display:flex; gap:10px;
-  }
+  .seg{display:flex; gap:10px;}
   .seg .btn{min-width:110px;}
-  .canvasCard{
-    padding:12px;
-  }
+  .canvasCard{padding:12px;}
   canvas{
     width:100%;
     height:auto;
@@ -174,18 +139,12 @@
     background:#0b0b0c;
     box-shadow:0 0 0 1px rgba(255,255,255,.06) inset;
   }
-  .hint{
-    margin-top:10px;
-    font-size:12px;
-    opacity:.78;
-    line-height:1.35;
-  }
 </style>
 </head>
 
 <body>
 
-<!-- PAGE 1: CALCULATOR -->
+<!-- PAGE 1 -->
 <div id="pageCalc">
   <h1>Battery Pack Calculator</h1>
 
@@ -229,7 +188,6 @@
 
   <div class="card">
     <h3>Pack Konfiguration</h3>
-
     <div class="row">
       <div class="col">
         <label>Serien (S)</label>
@@ -251,9 +209,8 @@
     <h3>Pack Info</h3>
     <table id="packInfo"></table>
 
-    <!-- Battery-like button -->
     <div class="batteryBtnWrap">
-      <div id="packBtn" class="batteryBtn" role="button" aria-label="Pack konfigurieren">
+      <div id="packBtn" class="batteryBtn">
         <div id="packBtnFill" class="batteryFill"></div>
         <div class="batteryContent">
           <div>
@@ -271,7 +228,7 @@
   </div>
 </div>
 
-<!-- PAGE 2: LAYOUT -->
+<!-- PAGE 2 -->
 <div id="pageLayout" class="hidden">
   <div class="topbar">
     <button id="backBtn" class="btn">← Zurück</button>
@@ -283,27 +240,21 @@
 
   <div class="card canvasCard">
     <canvas id="cv"></canvas>
-    <div class="hint">
-      Darstellung: <b>2D Plan</b> (Zellen + Nickel).<br>
-      Serien-Verbindungen sind <b>alternierend Top/Bottom</b> (Serpentine), damit es logisch & sicher bleibt.<br>
-      Für echte Packs: <b>BMS + Sicherung + Isolation</b> (Fishpaper/Kapton) beachten.
+    <div class="small">
+      Darstellung: Zellen + Nickel (Parallel vertikal, Serie zwischen Plus/Minus).<br>
+      Hinweis: Für echte Packs immer BMS + Sicherung + Isolation verwenden.
     </div>
   </div>
 </div>
 
 <script>
-/* -----------------------------
-   Cell database (Li-Ion 4.2V)
------------------------------- */
 const CELLS = [
   { id:"s35e",  name:"Samsung INR18650-35E",            format:"18650", mAh:3500, maxA:8,  nomV:3.6, fullV:4.2, note:"Hohe Kapazität, moderater Strom." },
   { id:"vtc5a", name:"Sony/Murata Konion US18650VTC5A", format:"18650", mAh:2600, maxA:25, nomV:3.6, fullV:4.2, note:"Sehr hochstromfähig." },
   { id:"vtc6",  name:"Sony/Murata Konion US18650VTC6",  format:"18650", mAh:3000, maxA:15, nomV:3.6, fullV:4.2, note:"Guter Allrounder." },
   { id:"ga",    name:"Panasonic NCR18650GA",            format:"18650", mAh:3450, maxA:10, nomV:3.6, fullV:4.2, note:"Hohe Kapazität, solide." },
   { id:"p28a",  name:"Molicel INR18650P28A",            format:"18650", mAh:2800, maxA:25, nomV:3.6, fullV:4.2, note:"Sehr stark (High Power)." },
-
   { id:"30t207", name:"Samsung INR20700-30T",           format:"20700", mAh:3000, maxA:35, nomV:3.6, fullV:4.2, note:"20700 High Power." },
-
   { id:"40t",   name:"Samsung INR21700-40T",            format:"21700", mAh:4000, maxA:35, nomV:3.6, fullV:4.2, note:"Sehr hochstromfähig." },
   { id:"50e",   name:"Samsung INR21700-50E",            format:"21700", mAh:5000, maxA:9.8, nomV:3.6, fullV:4.2, note:"Sehr hohe Kapazität." },
   { id:"p42a",  name:"Molicel INR21700P42A",            format:"21700", mAh:4200, maxA:30, nomV:3.6, fullV:4.2, note:"Top Allround (Power+Kapazität)." },
@@ -311,11 +262,8 @@ const CELLS = [
 ];
 
 const el = {
-  // pages
   pageCalc: document.getElementById("pageCalc"),
   pageLayout: document.getElementById("pageLayout"),
-
-  // calc inputs
   cellModel: document.getElementById("cellModel"),
   format: document.getElementById("format"),
   capacity: document.getElementById("capacity"),
@@ -328,14 +276,12 @@ const el = {
   cellInfo: document.getElementById("cellInfo"),
   packInfo: document.getElementById("packInfo"),
 
-  // battery button
   packBtn: document.getElementById("packBtn"),
   packBtnFill: document.getElementById("packBtnFill"),
   packBtnPct: document.getElementById("packBtnPct"),
   packBtnState: document.getElementById("packBtnState"),
   packBtnText: document.getElementById("packBtnText"),
 
-  // layout
   backBtn: document.getElementById("backBtn"),
   topBtn: document.getElementById("topBtn"),
   bottomBtn: document.getElementById("bottomBtn"),
@@ -343,8 +289,10 @@ const el = {
 };
 
 const state = {
-  view: "top", // top | bottom
-  isAnimating: false
+  view: "top",
+  isAnimating: false,
+  preferPlusOnTop: true,
+  flipPolarity: false,
 };
 
 function fillDropdown(){
@@ -367,6 +315,22 @@ function clampInt(v, min, max, fallback){
   return Math.max(min, Math.min(max, n));
 }
 
+/* Always keep the "plus-richer side" as TOP when S is odd.
+   (With our base rule col0 is plus-up, odd S already has more plus on top,
+    but we keep the hook for future flips.) */
+function applyPreferredOrientation(){
+  if (!state.preferPlusOnTop){
+    state.flipPolarity = false;
+    return;
+  }
+  const S = clampInt(el.series.value, 1, 24, 3);
+  if (S % 2 === 0){
+    state.flipPolarity = false;
+    return;
+  }
+  state.flipPolarity = false;
+}
+
 function updateCalc(){
   const cell = getSelectedCell();
 
@@ -375,7 +339,6 @@ function updateCalc(){
   el.series.value = S;
   el.parallel.value = P;
 
-  // set locked fields
   el.format.value = cell.format;
   el.capacity.value = cell.mAh;
   el.maxA.value = cell.maxA;
@@ -383,10 +346,7 @@ function updateCalc(){
   el.fullV.value = cell.fullV.toFixed(2);
   el.cellNote.textContent = cell.note || "";
 
-  // Li-Ion reference levels
-  const storageV=3.80;
-  const cutoffRec=3.30;
-  const cutoffAbs=3.00;
+  const storageV=3.80, cutoffRec=3.30, cutoffAbs=3.00;
 
   const packNomV=cell.nomV*S;
   const packFullV=cell.fullV*S;
@@ -420,7 +380,8 @@ function updateCalc(){
     <tr><td>Max Dauerstrom</td><td>${packMaxA.toFixed(1)} A</td></tr>
   `;
 
-  // reset button display (but keep if already at 100 after navigation)
+  applyPreferredOrientation();
+
   if (!state.isAnimating){
     el.packBtnFill.style.width = "0%";
     el.packBtnPct.textContent = "0%";
@@ -434,6 +395,8 @@ function showPage(which){
   if (which === "layout"){
     el.pageCalc.classList.add("hidden");
     el.pageLayout.classList.remove("hidden");
+    window.scrollTo(0,0);
+    applyPreferredOrientation();
     resizeCanvas();
     drawLayout();
   } else {
@@ -442,9 +405,7 @@ function showPage(which){
   }
 }
 
-/* -----------------------------
-   Battery button animation
------------------------------- */
+/* Battery button animation */
 function animateToLayout(){
   if (state.isAnimating) return;
   state.isAnimating = true;
@@ -453,13 +414,12 @@ function animateToLayout(){
   el.packBtnState.textContent = "lädt…";
   el.packBtnText.textContent = "Bitte warten";
 
-  const duration = 1400; // ms
+  const duration = 1200;
   const start = performance.now();
 
   function tick(now){
     const t = Math.min(1, (now - start) / duration);
     const pct = Math.round(t * 100);
-
     el.packBtnFill.style.width = pct + "%";
     el.packBtnPct.textContent = pct + "%";
 
@@ -476,19 +436,9 @@ function animateToLayout(){
   }
   requestAnimationFrame(tick);
 }
-
 el.packBtn.addEventListener("click", animateToLayout);
 
-/* -----------------------------
-   Layout drawing (Top/Bottom)
-   - Grid = P rows x S cols
-   - Polarity pattern per column:
-     col1 '+' on top, col2 '-' on top, col3 '+' on top, ...
-     -> For 3S2P => + - + / + - +
-   - Series bridges:
-     top bridges between (1-2), (3-4) ... (odd starts)
-     bottom bridges between (2-3), (4-5) ... (even starts)
------------------------------- */
+/* Layout controls */
 function setView(v){
   state.view = v;
   if (v === "top"){
@@ -504,23 +454,26 @@ el.topBtn.addEventListener("click", ()=>setView("top"));
 el.bottomBtn.addEventListener("click", ()=>setView("bottom"));
 
 el.backBtn.addEventListener("click", ()=>{
-  // reset button for next time
   state.isAnimating = false;
   el.packBtnFill.style.width = "0%";
   el.packBtnPct.textContent = "0%";
   el.packBtnState.textContent = "bereit";
   el.packBtnText.textContent = "Tippen zum Laden & Layout öffnen";
   el.packBtn.classList.remove("disabled");
-
   showPage("calc");
 });
 
+/* Canvas sizing: compact */
 function resizeCanvas(){
   const cv = el.cv;
   const rect = cv.getBoundingClientRect();
   const dpr = Math.max(1, window.devicePixelRatio || 1);
-  cv.width = Math.floor(rect.width * dpr);
-  cv.height = Math.floor((rect.width * 0.58) * dpr); // ~wide aspect
+
+  const maxH = Math.floor(window.innerHeight * 0.55);
+  const targetH = Math.min(maxH, Math.floor(rect.width * 0.45));
+
+  cv.width  = Math.floor(rect.width * dpr);
+  cv.height = Math.floor(targetH * dpr);
 }
 
 window.addEventListener("resize", ()=>{
@@ -530,173 +483,18 @@ window.addEventListener("resize", ()=>{
   }
 });
 
-function drawLayout(){
-  const cell = getSelectedCell();
-  const S = clampInt(el.series.value, 1, 24, 3);
-  const P = clampInt(el.parallel.value, 1, 24, 2);
-
-  const cv = el.cv;
-  const ctx = cv.getContext("2d");
-  const w = cv.width, h = cv.height;
-
-  // background
-  ctx.clearRect(0,0,w,h);
-  ctx.fillStyle = "#0b0b0c";
-  ctx.fillRect(0,0,w,h);
-
-  const pad = Math.max(28, Math.floor(w * 0.055));
-  const gridW = w - pad*2;
-  const gridH = h - pad*2;
-
-  // cell size
-  const maxCell = Math.min(
-    gridW / (S * 2.0),
-    gridH / (P * 2.0)
-  );
-  const r = Math.max(14, Math.floor(maxCell * 0.62));
-  const gapX = (gridW - (S * r*2)) / Math.max(1, S-1);
-  const gapY = (gridH - (P * r*2)) / Math.max(1, P-1);
-
-  // helpers
-  function cellCenter(row, col){
-    const x = pad + col*(r*2 + gapX) + r;
-    const y = pad + row*(r*2 + gapY) + r;
-    return {x,y};
-  }
-
-  // terminal side for overall pack
-  const plusUpLastCol = (S % 2 === 1); // col1=plus up, so odd col => plus up
-  const packPlusSide = plusUpLastCol ? "top" : "bottom";
-  const packMinusSide = "bottom"; // col1 is plus-up => minus is bottom
-  // if S starts with plus-up always true here; pack minus always bottom.
-
-  // But if you ever decide to flip start polarity later, you'd compute it.
-  // For now: column polarity fixed: col1 plus-up.
-
-  // draw title
-  ctx.fillStyle = "rgba(255,255,255,.85)";
-  ctx.font = `${Math.floor(w*0.03)}px Arial`;
-  ctx.textAlign = "left";
-  ctx.fillText(`Layout ${S}S${P}P – ${state.view.toUpperCase()} (Nickel)`, pad, Math.floor(pad*0.72));
-
-  // draw cells
-  for (let row=0; row<P; row++){
-    for (let col=0; col<S; col++){
-      const {x,y} = cellCenter(row,col);
-
-      // polarity on top for this column
-      const plusUp = ((col % 2) === 0); // col 0 => plus up
-      const topPol = plusUp ? "+" : "-";
-      const bottomPol = plusUp ? "-" : "+";
-      const pol = (state.view === "top") ? topPol : bottomPol;
-
-      // ring
-      ctx.fillStyle = "rgba(124,92,255,.10)";
-      ctx.beginPath();
-      ctx.arc(x,y,r,0,Math.PI*2);
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(255,255,255,.10)";
-      ctx.lineWidth = Math.max(1, Math.floor(r*0.08));
-      ctx.beginPath();
-      ctx.arc(x,y,r,0,Math.PI*2);
-      ctx.stroke();
-
-      // inner cap
-      ctx.fillStyle = "rgba(255,255,255,.06)";
-      ctx.beginPath();
-      ctx.arc(x,y,Math.floor(r*0.55),0,Math.PI*2);
-      ctx.fill();
-
-      // polarity text
-      ctx.fillStyle = (pol === "+") ? "rgba(255,255,255,.92)" : "rgba(255,255,255,.72)";
-      ctx.font = `${Math.floor(r*0.9)}px Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(pol, x, y);
-    }
-  }
-
-  // draw parallel strips (connect cells in same column, same polarity on the shown side)
-  // We'll draw a vertical strip between row 0 and row 1 (and so on) in each column.
-  // For P>2, we connect each adjacent pair (row i -> i+1) for clarity.
-  ctx.fillStyle = "rgba(200,200,200,.28)";
-  for (let col=0; col<S; col++){
-    for (let row=0; row<P-1; row++){
-      const a = cellCenter(row,col);
-      const b = cellCenter(row+1,col);
-      const stripW = Math.max(8, Math.floor(r*0.45));
-      const stripH = Math.max(12, Math.floor((b.y - a.y) + r*0.25));
-      const x = a.x - stripW/2;
-      const y = a.y - stripH/2;
-      roundRect(ctx, x, y, stripW, stripH, Math.floor(stripW*0.35));
-      ctx.fill();
-    }
-  }
-
-  // draw series bridges (serpentine alternating top/bottom)
-  // On TOP: bridges between col0-1, 2-3, 4-5...
-  // On BOTTOM: bridges between col1-2, 3-4, 5-6...
-  ctx.fillStyle = "rgba(200,200,200,.36)";
-  const topMode = (state.view === "top");
-
-  for (let col=0; col<S-1; col++){
-    const isTopBridge = (col % 2 === 0); // start at col0
-    if ((topMode && isTopBridge) || (!topMode && !isTopBridge)){
-      // place bridge near the middle height (between row groups)
-      // We'll bridge at the top edge area for "top", and bottom edge area for "bottom"
-      // but since we're a 2D plan, we simply draw it across the middle row band.
-      const rowForBridge = Math.floor((P-1)/2);
-      const a = cellCenter(rowForBridge, col);
-      const b = cellCenter(rowForBridge, col+1);
-
-      const bridgeH = Math.max(10, Math.floor(r*0.45));
-      const bridgeW = Math.max(18, Math.floor((b.x - a.x) - r*0.55));
-
-      const x = a.x + r*0.28;
-      const yOffset = topMode ? (-r*0.78) : (r*0.58);
-      const y = a.y + yOffset;
-
-      roundRect(ctx, x, y, bridgeW, bridgeH, Math.floor(bridgeH*0.35));
-      ctx.fill();
-    }
-  }
-
-  // mark pack terminals (+ / -)
-  // - terminal is at col0 negative side (since col0 is plus-up -> negative is bottom)
-  // + terminal is at col(S-1) positive side (depends on parity)
-  const minusCol = 0;
-  const plusCol = S-1;
-
-  const minusPlusUp = true; // col0 plus up fixed
-  const minusSide = minusPlusUp ? "bottom" : "top";
-  const plusPlusUp = ((plusCol % 2) === 0);
-  const plusSide = plusPlusUp ? "top" : "bottom";
-
-  function drawTerminal(col, side, label, color){
-    const row = (side === "top") ? 0 : (P-1);
-    const c = cellCenter(row, col);
-    const tx = c.x;
-    const ty = c.y + ((side === "top") ? (-r*1.35) : (r*1.35));
-
-    const active = ((state.view === side)); // bright only on matching view
-    ctx.fillStyle = active ? color : "rgba(255,255,255,.18)";
-    ctx.font = `${Math.floor(r*0.75)}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(label, tx, ty);
-
-    // small marker line
-    ctx.strokeStyle = active ? color : "rgba(255,255,255,.12)";
-    ctx.lineWidth = Math.max(2, Math.floor(r*0.12));
-    ctx.beginPath();
-    ctx.moveTo(tx, ty + (side==="top" ? r*0.25 : -r*0.25));
-    ctx.lineTo(tx, ty + (side==="top" ? r*0.75 : -r*0.75));
-    ctx.stroke();
-  }
-
-  drawTerminal(minusCol, minusSide, "−", "rgba(255,80,80,.95)");
-  drawTerminal(plusCol, plusSide, "+", "rgba(120,220,120,.95)");
+/* --- Polarity logic (matches your 3S2P reference) ---
+   Base rule:
+   - column 0: TOP shows "+"
+   - column 1: TOP shows "-"
+   - column 2: TOP shows "+"
+   etc.
+   Bottom view is inverted.
+*/
+function isPlus(row, col){
+  let plusTopBase = (col % 2 === 0); // col0 plus-up
+  if (state.flipPolarity) plusTopBase = !plusTopBase;
+  return state.view === "top" ? plusTopBase : !plusTopBase;
 }
 
 function roundRect(ctx, x, y, w, h, r){
@@ -709,6 +507,132 @@ function roundRect(ctx, x, y, w, h, r){
   ctx.arcTo(x, y+h, x, y, r);
   ctx.arcTo(x, y, x+w, y, r);
   ctx.closePath();
+}
+
+function drawLayout(){
+  const S = clampInt(el.series.value, 1, 24, 3);
+  const P = clampInt(el.parallel.value, 1, 24, 2);
+
+  const cv = el.cv;
+  const ctx = cv.getContext("2d");
+  const w = cv.width, h = cv.height;
+
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = "#0b0b0c";
+  ctx.fillRect(0,0,w,h);
+
+  const pad = Math.max(22, Math.floor(w * 0.05));
+  const gridW = w - pad*2;
+  const gridH = h - pad*2;
+
+  // Fit circles
+  const r = Math.max(13, Math.floor(Math.min(
+    gridW / (S * 2.25),
+    gridH / (P * 2.25)
+  )));
+
+  const cellW = r*2;
+  const gapX = (gridW - (S * cellW)) / Math.max(1, S-1);
+  const gapY = (gridH - (P * cellW)) / Math.max(1, P-1);
+
+  function cellCenter(row, col){
+    const x = pad + col*(cellW + gapX) + r;
+    const y = pad + row*(cellW + gapY) + r;
+    return {x,y};
+  }
+
+  // title
+  ctx.fillStyle = "rgba(255,255,255,.85)";
+  ctx.font = `${Math.floor(w*0.035)}px Arial`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(`${S}S${P}P – ${state.view.toUpperCase()} (Nickel)`, pad, Math.floor(pad*0.75));
+
+  // cells
+  for (let row=0; row<P; row++){
+    for (let col=0; col<S; col++){
+      const {x,y} = cellCenter(row,col);
+      const plus = isPlus(row,col);
+      const pol = plus ? "+" : "-";
+
+      ctx.fillStyle = "rgba(124,92,255,.10)";
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+
+      ctx.strokeStyle = "rgba(255,255,255,.10)";
+      ctx.lineWidth = Math.max(1, Math.floor(r*0.10));
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,255,255,.06)";
+      ctx.beginPath(); ctx.arc(x,y,Math.floor(r*0.55),0,Math.PI*2); ctx.fill();
+
+      ctx.fillStyle = plus ? "rgba(255,255,255,.92)" : "rgba(255,255,255,.70)";
+      ctx.font = `${Math.floor(r*0.95)}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(pol, x, y);
+    }
+  }
+
+  // Parallel nickel (vertical within each column)
+  ctx.fillStyle = "rgba(200,200,200,.28)";
+  for (let col=0; col<S; col++){
+    for (let row=0; row<P-1; row++){
+      const a = cellCenter(row,col);
+      const b = cellCenter(row+1,col);
+      const stripW = Math.max(8, Math.floor(r*0.45));
+      const stripH = Math.max(12, Math.floor((b.y - a.y) + r*0.15));
+      const x = a.x - stripW/2;
+      const y = a.y - stripH/2;
+      roundRect(ctx, x, y, stripW, stripH, Math.floor(stripW*0.35));
+      ctx.fill();
+    }
+  }
+
+  // Series bridges: only where PLUS connects to MINUS between adjacent columns
+  ctx.fillStyle = "rgba(220,220,220,.55)";
+  for (let col=0; col<S-1; col++){
+    for (let row=0; row<P; row++){
+      const aPlus = isPlus(row, col);
+      const bPlus = isPlus(row, col+1);
+
+      // Need a series link when polarities differ
+      if (aPlus === bPlus) continue;
+
+      const a = cellCenter(row, col);
+      const b = cellCenter(row, col+1);
+
+      const bridgeH = Math.max(10, Math.floor(r * 0.40));
+      const bridgeW = Math.max(18, Math.floor((b.x - a.x) - r * 0.90));
+
+      const x = a.x + r*0.45;
+      const y = a.y - bridgeH/2;
+
+      roundRect(ctx, x, y, bridgeW, bridgeH, Math.floor(bridgeH*0.35));
+      ctx.fill();
+    }
+  }
+
+  // terminals (+ / -) (visual hints)
+  const minusCol = 0;
+  const plusCol = S-1;
+
+  const minusSide = (state.view === "top") ? "-" : "+";
+  const plusSide  = (state.view === "top") ? "+" : "-";
+
+  // Draw small labels at corners for orientation
+  ctx.font = `${Math.floor(r*0.7)}px Arial`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(255,255,255,.55)";
+  ctx.fillText("Links→Rechts: Serie", pad, pad + Math.floor(r*0.25));
+
+  ctx.textAlign = "right";
+  ctx.fillStyle = "rgba(120,220,120,.85)";
+  ctx.fillText(`Ende: ${plusSide}`, w - pad, pad + Math.floor(r*0.25));
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "rgba(255,80,80,.85)";
+  ctx.fillText(`Start: ${minusSide}`, pad, h - pad - Math.floor(r*0.9));
 }
 
 /* init */
