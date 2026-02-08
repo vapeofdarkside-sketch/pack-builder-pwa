@@ -125,15 +125,15 @@
     <h3>Pack Konfiguration</h3>
     <div class="row">
       <div class="col">
-        <label>Serien (S)</label>
-        <!-- iOS-sicher: text + numeric keyboard -->
+        <label>Serien (S) — max 12</label>
         <input id="series" type="text" value="3" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
       </div>
       <div class="col">
-        <label>Parallel (P)</label>
+        <label>Parallel (P) — max 20</label>
         <input id="parallel" type="text" value="2" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
       </div>
     </div>
+    <div class="small">Große Packs werden im Layout automatisch passend skaliert.</div>
   </div>
 
   <div class="card">
@@ -185,11 +185,11 @@
     <div class="row">
       <div class="col">
         <label>Nickelbreite (mm)</label>
-        <input id="nickelMm" type="number" min="4" max="20" step="0.5" value="8">
+        <input id="nickelMm" type="number" min="4" max="30" step="0.5" value="8">
       </div>
       <div class="col">
         <label>Zell-Abstand (mm)</label>
-        <input id="gapMm" type="number" min="0" max="3" step="0.1" value="0.6">
+        <input id="gapMm" type="number" min="0" max="5" step="0.1" value="0.6">
       </div>
     </div>
 
@@ -218,7 +218,7 @@
 <script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
 
 <script>
-// build: 2026-02-08-ios-pack-input-fix
+// build: 2026-02-08-auto-layout-12s-p20-rowwise-series
 
 const CELLS = [
   { id:"s35e",  name:"Samsung INR18650-35E",            format:"18650", mAh:3500, maxA:8,  nomV:3.6, fullV:4.2, note:"Hohe Kapazität, moderater Strom." },
@@ -276,10 +276,36 @@ const el = {
 
 const state = { view:"top", isAnimating:false, flipPolarity:false };
 
-function clampInt(v, min, max, fallback){
-  const n = parseInt(v, 10);
-  if (Number.isNaN(n)) return fallback;
-  return Math.max(min, Math.min(max, n));
+const LIMIT_S_MAX = 12;
+const LIMIT_P_MAX = 20;
+
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+function parseDigits(str){ return (str||"").replace(/[^\d]/g, ""); }
+
+function parseSeries(str, fallback){
+  const d = parseDigits(str);
+  if(!d) return fallback;
+  return clamp(parseInt(d,10), 1, LIMIT_S_MAX);
+}
+function parseParallel(str, fallback){
+  const d = parseDigits(str);
+  if(!d) return fallback;
+  return clamp(parseInt(d,10), 1, LIMIT_P_MAX);
+}
+
+// iOS Fix: markieren + echte Ersetzung
+function selectAllOnFocus(e){
+  const t = e.target;
+  setTimeout(()=>{ try{ t.focus(); t.setSelectionRange(0, t.value.length); }catch(_){} }, 0);
+}
+function clearOnFirstDigit(e){
+  const t = e.target;
+  if(t.dataset._cleared === "1") return;
+  const allSelected = (t.selectionStart === 0 && t.selectionEnd === t.value.length);
+  if(allSelected){
+    t.value = "";
+    t.dataset._cleared = "1";
+  }
 }
 
 function fillDropdown(){
@@ -291,7 +317,6 @@ function fillDropdown(){
   }
   el.cellModel.value = "s35e";
 }
-
 function getSelectedCell(){ return CELLS.find(c => c.id === el.cellModel.value) || CELLS[0]; }
 function getCellDiamMm(){ const cell = getSelectedCell(); return CELL_DIAM_MM[cell.format] || 18.3; }
 
@@ -302,45 +327,20 @@ function isPlus(row, col){
   return state.view === "top" ? plusTop : !plusTop;
 }
 
-/* ===== iOS-sichere Pack Input Logik (wichtig!) ===== */
-function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
-function parsePackVal(str, fallback){
-  const digits = (str || "").replace(/[^\d]/g, "");
-  if(!digits) return fallback;
-  return clamp(parseInt(digits, 10), 1, 24);
-}
 function syncPackInputs(){
-  const s = parsePackVal(el.series.value, 3);
-  const p = parsePackVal(el.parallel.value, 2);
+  const s = parseSeries(el.series.value, 3);
+  const p = parseParallel(el.parallel.value, 2);
   el.series.value = String(s);
   el.parallel.value = String(p);
   updateCalc();
   if(!el.pageLayout.classList.contains("hidden")) drawLayout();
 }
-function selectAllOnFocus(e){
-  const t = e.target;
-  setTimeout(() => {
-    try{
-      t.focus();
-      t.setSelectionRange(0, t.value.length);
-    }catch(_){}
-  }, 0);
-}
-function clearOnFirstDigit(e){
-  const t = e.target;
-  if(t.dataset._cleared === "1") return;
-  const allSelected = (t.selectionStart === 0 && t.selectionEnd === t.value.length);
-  if(allSelected){
-    t.value = "";
-    t.dataset._cleared = "1";
-  }
-}
-/* ===== Ende iOS Pack Input ===== */
 
 function updateCalc(){
   const cell = getSelectedCell();
-  const S = clampInt(el.series.value, 1, 24, 3);
-  const P = clampInt(el.parallel.value, 1, 24, 2);
+  const S = parseSeries(el.series.value, 3);
+  const P = parseParallel(el.parallel.value, 2);
+
   el.series.value = String(S);
   el.parallel.value = String(P);
 
@@ -449,10 +449,8 @@ function resizeCanvas(){
   const cv = el.cv;
   const rect = cv.getBoundingClientRect();
   const dpr = Math.max(1, window.devicePixelRatio || 1);
-
   const maxH = Math.floor(window.innerHeight * 0.55);
   const targetH = Math.min(maxH, Math.floor(rect.width * 0.85));
-
   cv.width  = Math.floor(rect.width * dpr);
   cv.height = Math.floor(targetH * dpr);
 }
@@ -465,8 +463,8 @@ window.addEventListener("resize", ()=>{
 });
 
 function buildGeometryMm(){
-  const S = clampInt(el.series.value, 1, 24, 3);
-  const P = clampInt(el.parallel.value, 1, 24, 2);
+  const S = parseSeries(el.series.value, 3);
+  const P = parseParallel(el.parallel.value, 2);
 
   const d = getCellDiamMm();
   const r = d / 2;
@@ -494,7 +492,7 @@ function buildGeometryMm(){
   const parallelNickel = [];
   const seriesNickel = [];
 
-  // Parallel (immer): vertical strip per column
+  // Parallel (immer): 1 Strip pro Spalte über alle Reihen
   for(let col=0; col<S; col++){
     const top = cellCenterMm(0,col);
     const bot = cellCenterMm(P-1,col);
@@ -511,36 +509,24 @@ function buildGeometryMm(){
   // Series: gleiche Breite wie Parallel
   const lane = nickelW;
 
-  function addRect(x,y,w,h,rad=0){
-    seriesNickel.push({x,y,w,h,rad});
+  function addRect(x,y,w,h,rad=0){ seriesNickel.push({x,y,w,h,rad}); }
+
+  // ✅ Serien: pro Übergang UND pro Reihe eine horizontale Brücke (schweißbar 1:1)
+  function addSeriesBridgeRowwise(col){
+    const c0 = col, c1 = col + 1;
+
+    const ref0 = cellCenterMm(0, c0);
+    const ref1 = cellCenterMm(0, c1);
+    const x = ref0.x - nickelW/2;
+    const w = (ref1.x - ref0.x) + nickelW;
+
+    for(let row=0; row<P; row++){
+      const p0 = cellCenterMm(row, c0);
+      addRect(x, p0.y - lane/2, w, lane, lane*0.20);
+    }
   }
 
-  function addSeriesTwoHoriz_Long(col, rowA, rowB){
-    const c0 = col;
-    const c1 = col + 1;
-
-    const cA0 = cellCenterMm(rowA, c0);
-    const cA1 = cellCenterMm(rowA, c1);
-    const cB0 = cellCenterMm(rowB, c0);
-    const cB1 = cellCenterMm(rowB, c1);
-
-    const x = cA0.x - nickelW/2;
-    const w = (cA1.x - cA0.x) + nickelW;
-
-    addRect(x, cA0.y - lane/2, w, lane, lane*0.20);
-    addRect(x, cB0.y - lane/2, w, lane, lane*0.20);
-  }
-
-  function chooseRowPair(col){
-    if (P === 1) return [0,0];
-    if (P === 2) return [0,1];
-    const useTop = (col % 2 === 0);
-    return useTop ? [0,1] : [P-2, P-1];
-  }
-
-  // wie deine Skizze:
-  // TOP: col 1,3,5...
-  // BOTTOM: col 0,2,4...
+  // TOP: Übergänge 1,3,5...  |  BOTTOM: 0,2,4...
   function shouldDrawSeriesOnThisView(col){
     const seriesOnTop = (col % 2 === 1);
     return (state.view === "top" && seriesOnTop) || (state.view === "bottom" && !seriesOnTop);
@@ -549,8 +535,7 @@ function buildGeometryMm(){
   if (S >= 2){
     for(let col=0; col<S-1; col++){
       if(!shouldDrawSeriesOnThisView(col)) continue;
-      const [rowA,rowB] = chooseRowPair(col);
-      addSeriesTwoHoriz_Long(col, rowA, rowB);
+      addSeriesBridgeRowwise(col);
     }
   }
 
@@ -747,7 +732,7 @@ function close3D(){
   three = { renderer:null, scene:null, camera:null, controls:null, anim:null };
 }
 
-/* ===== Events ===== */
+// Events
 el.packBtn.addEventListener("click", animateToLayout);
 
 el.backBtn.addEventListener("click", ()=>{
@@ -773,12 +758,8 @@ el.bottomBtn.addEventListener("click", ()=>{
   drawLayout();
 });
 
-el.cellModel.addEventListener("change", ()=>{
-  updateCalc();
-  if(!el.pageLayout.classList.contains("hidden")) drawLayout();
-});
+el.cellModel.addEventListener("change", syncPackInputs);
 
-// iOS Pack Input Events
 ["focus","click"].forEach(evt=>{
   el.series.addEventListener(evt, selectAllOnFocus);
   el.parallel.addEventListener(evt, selectAllOnFocus);
